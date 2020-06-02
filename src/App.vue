@@ -14,7 +14,7 @@ export default {
   }),
   computed: {
     rise() {
-      return SunCalc.getMoonTimes(new Date(), 50, -4);
+      return SunCalc.getMoonTimes(new Date(), 51.5074, 0.1278);
     }
   }
 };
