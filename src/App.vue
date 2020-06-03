@@ -8,6 +8,8 @@
     </p>
     <p v-if="coordinates.error">
       {{ coordinates.error }}<br />
+      {{ coordinates.error.code }}<br />
+      {{ coordinates.error.message }}<br />
       {{ coordinates.errorString }}
     </p>
     {{ JSON.stringify(error) }}
