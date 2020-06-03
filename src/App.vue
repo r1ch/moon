@@ -33,7 +33,7 @@ export default {
   },
   methods: {
     locate: function() {
-      this.$getLocation()
+      this.$getLocation({ maximumAge: 50000, timeout: 20000 })
         .then(coordinates => {
           this.coordinates.lat = coordinates.lat;
           this.coordinates.lng = coordinates.lng;
