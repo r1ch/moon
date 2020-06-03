@@ -21,8 +21,8 @@ export default {
     coordinates: {
       default: true,
       error: false,
-      lat: 51.5074,
-      lng: 0.1278
+      latitude: 51.5074,
+      longitude: 0.1278
     },
     now: new Date()
   }),
@@ -33,23 +33,27 @@ export default {
   },
   methods: {
     locate: function() {
-      this.$getLocation()
-        .then(coordinates => {
-          this.coordinates.lat = coordinates.lat;
-          this.coordinates.lng = coordinates.lng;
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          console.log(position);
+          this.coordinates.latitude = position.coords.latitude;
+          this.coordinates.longitude = position.coords.longitude;
           this.coordinates.default = false;
-        })
-        .catch(error => {
-          this.coordinates.error = error;
-        });
+        },
+        error => {
+          console.log(error);
+          this.coordinates.error = JSON.stringify(error);
+        },
+        { maximumAge: 50000, timeout: 20000 }
+      );
     }
   },
   computed: {
     times: function() {
       let times = SunCalc.getMoonTimes(
         this.now,
-        this.coordinates.lat,
-        this.coordinates.lng
+        this.coordinates.latitude,
+        this.coordinates.longitude
       );
       return {
         rise: new Date(times.rise).toLocaleTimeString(),
