@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    {{ times }}
+    {{ times }}<br>
+    {{ now }}
   </div>
 </template>
 
