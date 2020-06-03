@@ -6,6 +6,9 @@
       I've assumed you're in London<br />
       <a href="#" @click="locate">Update location</a>
     </p>
+    <p v-if="coordinates.error">
+      {{ coordinates.error }}
+    </p>
   </div>
 </template>
 
@@ -17,6 +20,7 @@ export default {
   data: () => ({
     coordinates: {
       default: true,
+      error: false,
       lat: 51.5074,
       lng: 0.1278
     },
@@ -29,11 +33,15 @@ export default {
   },
   methods: {
     locate: function() {
-      this.$getLocation().then(coordinates => {
-        this.coordinates.lat = coordinates.lat;
-        this.coordinates.lng = coordinates.lng;
-        this.coordinates.default = false;
-      });
+      this.$getLocation()
+        .then(coordinates => {
+          this.coordinates.lat = coordinates.lat;
+          this.coordinates.lng = coordinates.lng;
+          this.coordinates.default = false;
+        })
+        .catch(error => {
+          this.coordinates.error = error;
+        });
     }
   },
   computed: {
