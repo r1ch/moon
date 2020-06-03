@@ -22,6 +22,7 @@ export default {
     coordinates: {
       default: true,
       error: false,
+      errorString : false,
       latitude: 51.5074,
       longitude: 0.1278
     },
@@ -45,11 +46,14 @@ export default {
           error => {
             console.log(error);
             this.coordinates.error = error;
+            this.coordinates.errorString = JSON.stringify(error)
+
           },
           { maximumAge: 50000, timeout: 20000 }
         );
       } catch (error) {
         this.coordinates.error = error;
+        this.coordinates.errorString = JSON.stringify(error)
       }
     }
   },
