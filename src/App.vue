@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     {{ times }}<br>
-    {{ now }}
+    {{ now }}<br>
+    <p v-if = "coordinates.default">I've assumed you're in London</p>
   </div>
 </template>
 
@@ -12,8 +13,9 @@ export default {
   name: "App",
   data: () => ({
     coordinates: {
-      lat: 0,
-      lng: 0
+      default: true,
+      lat: 51.5074,
+      lng: 0.1278
     },
     now: new Date()
   }),
@@ -21,6 +23,7 @@ export default {
     this.$getLocation().then(coordinates => {
       this.coordinates.lat = coordinates.lat;
       this.coordinates.lng = coordinates.lng;
+      this.coordinates.default = false;
     });
     setInterval(() => {
       this.now = new Date();
