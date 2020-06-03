@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    {{ rise }}
+    {{ times }}
   </div>
 </template>
 
@@ -10,11 +10,32 @@ const SunCalc = require("suncalc");
 export default {
   name: "App",
   data: () => ({
-    word: "Hi!"
+    coordinates: {
+      lat: 0,
+      lng: 0
+    },
+    now: new Date()
   }),
+  created: function() {
+    this.$getLocation().then(coordinates => {
+      this.coordinates.lat = coordinates.lat;
+      this.coordinates.lng = coordinates.lng;
+    });
+    setInterval(() => {
+      this.now = new Date();
+    }, 1000);
+  },
   computed: {
-    rise() {
-      return SunCalc.getMoonTimes(new Date(), 51.5074, 0.1278);
+    times: function() {
+      let times = SunCalc.getMoonTimes(
+        this.now,
+        this.coordinates.lat,
+        this.coordinates.lng
+      );
+      return {
+        rise: new Date(times.rise).toLocaleTimeString(),
+        set: new Date(times.set).toLocaleTimeString()
+      };
     }
   }
 };
