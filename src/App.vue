@@ -9,6 +9,7 @@
     <p v-if="coordinates.error">
       {{ coordinates.error }}
     </p>
+    {{ JSON.stringify(error) }}
   </div>
 </template>
 
@@ -33,19 +34,23 @@ export default {
   },
   methods: {
     locate: function() {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          console.log(position);
-          this.coordinates.latitude = position.coords.latitude;
-          this.coordinates.longitude = position.coords.longitude;
-          this.coordinates.default = false;
-        },
-        error => {
-          console.log(error);
-          this.coordinates.error = JSON.stringify(error);
-        },
-        { maximumAge: 50000, timeout: 20000 }
-      );
+      try {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            console.log(position);
+            this.coordinates.latitude = position.coords.latitude;
+            this.coordinates.longitude = position.coords.longitude;
+            this.coordinates.default = false;
+          },
+          error => {
+            console.log(error);
+            this.coordinates.error = error;
+          },
+          { maximumAge: 50000, timeout: 20000 }
+        );
+      } catch (error) {
+        this.coordinates.error = error;
+      }
     }
   },
   computed: {
