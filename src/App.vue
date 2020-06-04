@@ -9,9 +9,11 @@
     <p v-if="coordinates.error">
       {{ coordinates.error }}
     </p>
+    <br />
     <sky-component
       :now="now"
-      :phase="illumination.phase"
+      :position="position"
+      :illumination="illumination"
     ></sky-component>
   </div>
 </template>
@@ -92,7 +94,7 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: ivory;
   margin-top: 60px;
 }
 </style>

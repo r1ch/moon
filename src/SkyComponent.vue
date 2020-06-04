@@ -9,10 +9,10 @@ const d3 = require("d3");
 
 export default {
   name: "sky-component",
-  props: ["now", "position", "phase"],
-  data: () => {
+  props: ["now", "position", "illumination"],
+  data: function() {
     let full = {
-      width: 600,
+      width: 300,
       height: 300
     };
     let margin = {
@@ -28,7 +28,12 @@ export default {
     return {
       full: full,
       margin: margin,
-      inner: inner
+      inner: inner,
+      radius: Math.min(inner.width, inner.height) / 2,
+      phase: this.illumination.phase,
+      angle:
+        ((this.illumination.angle - this.position.parallacticAngle) / Math.PI) *
+        180
     };
   },
   mounted: function() {
@@ -40,15 +45,16 @@ export default {
       .append("g")
       .attr(
         "transform",
-        `translate(${this.margin.left}, ${this.margin.top}) 
-        rotate(20, ${this.inner.width / 2}, ${this.inner.height / 2})`
+        `translate(${this.margin.left}, ${this.margin.top})
+        rotate(${this.angle}, ${this.inner.width / 2}, ${this.inner.height /
+          2})`
       );
 
     this.svg
       .append("clipPath")
       .attr("id", "outer-clip")
       .append("circle")
-      .attr("r", "50")
+      .attr("r", this.radius)
       .attr("cx", this.inner.width / 2)
       .attr("cy", this.inner.height / 2);
 
@@ -78,47 +84,63 @@ export default {
         dark: []
       };
 
-      let radius = Math.min(this.inner.width,this.inner.height)/2
-
       sweeps.lit.push(
-        `a ${radius * (this.phase <=0.5 ? 4*Math.abs(this.phase - 0.25) : 1)},${radius} 0 0 ${this.phase <=0.25 ? 1 : 0} 0,${2 * radius}`
+        `a ${this.radius *
+          (this.phase <= 0.5 ? 4 * Math.abs(this.phase - 0.25) : 1)},${
+          this.radius
+        } 0 0 ${this.phase <= 0.25 ? 1 : 0} 0,${2 * this.radius}`
       );
       sweeps.lit.push(
-        `a ${radius * (this.phase <=0.5 ? 1 : 4*Math.abs(this.phase - 0.75))},${radius} 0 0 ${this.phase <=0.75 ? 0 : 1} 0,${-2 * radius}`
+        `a ${this.radius *
+          (this.phase <= 0.5 ? 1 : 4 * Math.abs(this.phase - 0.75))},${
+          this.radius
+        } 0 0 ${this.phase <= 0.75 ? 0 : 1} 0,${-2 * this.radius}`
       );
 
       sweeps.dark.push(
-        `a ${radius * (this.phase <=0.5 ? 1 : 4*Math.abs(this.phase - 0.75))},${radius} 0 0 ${this.phase > 0.5 && this.phase <= 0.75 ? 1 : 0} 0,${2 * radius}`
+        `a ${this.radius *
+          (this.phase <= 0.5 ? 1 : 4 * Math.abs(this.phase - 0.75))},${
+          this.radius
+        } 0 0 ${this.phase > 0.5 && this.phase <= 0.75 ? 1 : 0} 0,${2 *
+          this.radius}`
       );
       sweeps.dark.push(
-        `a ${radius * (this.phase <=0.5 ? 4*Math.abs(this.phase - 0.25) : 1)},${radius} 0 0 ${this.phase >= 0.25 && this.phase < 0.5 ? 1 : 0} 0,${-2 * radius}`
+        `a ${this.radius *
+          (this.phase <= 0.5 ? 4 * Math.abs(this.phase - 0.25) : 1)},${
+          this.radius
+        } 0 0 ${this.phase >= 0.25 && this.phase < 0.5 ? 1 : 0} 0,${-2 *
+          this.radius}`
       );
 
       this.svg
         .selectAll(".moondark")
         .data([1])
-        .join(
-          enter => enter.append("path").attr("class", "moondark")
-          //.attr("clip-path", "url(#outer-clip)")
+        .join(enter =>
+          enter
+            .append("path")
+            .attr("class", "moondark")
+            .attr("clip-path", "url(#outer-clip)")
         )
         .attr(
           "d",
           `M ${this.inner.width / 2} 
-          ${this.inner.height / 2 - radius} 
+          ${this.inner.height / 2 - this.radius} 
           ${sweeps.dark.join(" ")}`
         );
 
       this.svg
         .selectAll(".moonlit")
         .data([1])
-        .join(
-          enter => enter.append("path").attr("class", "moonlit")
-          //.attr("clip-path", "url(#outer-clip)")
+        .join(enter =>
+          enter
+            .append("path")
+            .attr("class", "moonlit")
+            .attr("clip-path", "url(#outer-clip)")
         )
         .attr(
           "d",
           `M ${this.inner.width / 2} 
-          ${this.inner.height / 2 - radius} 
+          ${this.inner.height / 2 - this.radius} 
           ${sweeps.lit.join(" ")}`
         )
         .style("filter", "url(#glow)");
@@ -135,5 +157,12 @@ export default {
 .moondark {
   fill: gray;
   stroke: none;
+}
+.sky {
+  fill: black;
+  stroke: none;
+}
+html {
+  background: black;
 }
 </style>
