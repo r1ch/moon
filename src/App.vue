@@ -1,31 +1,32 @@
 <template>
   <div id="app">
-    {{ times }}<br />
+    Moon rise today: {{ times.riseString }}<br />
     {{ now }}<br />
     <p v-if="coordinates.default">
       I've assumed you're in London<br />
-      <a href="#" @click="locate">Update location</a>
+      <a href="#" v-if="!coordinates.error" @click="locate">Update location</a>
     </p>
     <p v-if="coordinates.error">
-      {{ coordinates.error }}<br />
-      {{ coordinates.error.code }}<br />
-      {{ coordinates.error.message }}<br />
-      {{ coordinates.errorString }}
+      {{ coordinates.error }}
     </p>
-    {{ JSON.stringify(error) }}
+    <sky-component
+      :now="now"
+      :phase="illumination.phase"
+    ></sky-component>
   </div>
 </template>
 
 <script>
+import SkyComponent from "./SkyComponent.vue";
 const SunCalc = require("suncalc");
 
 export default {
   name: "App",
+  components: { SkyComponent },
   data: () => ({
     coordinates: {
       default: true,
       error: false,
-      errorString: false,
       latitude: 51.5074,
       longitude: 0.1278
     },
@@ -38,25 +39,17 @@ export default {
   },
   methods: {
     locate: function() {
-      try {
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            console.log(position);
-            this.coordinates.latitude = position.coords.latitude;
-            this.coordinates.longitude = position.coords.longitude;
-            this.coordinates.default = false;
-          },
-          error => {
-            console.log(error);
-            this.coordinates.error = error;
-            this.coordinates.errorString = JSON.stringify(error);
-          },
-          { maximumAge: 50000, timeout: 20000 }
-        );
-      } catch (error) {
-        this.coordinates.error = error;
-        this.coordinates.errorString = JSON.stringify(error);
-      }
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          this.coordinates.latitude = position.coords.latitude;
+          this.coordinates.longitude = position.coords.longitude;
+          this.coordinates.default = false;
+        },
+        error => {
+          this.coordinates.error = error.message;
+        },
+        { maximumAge: 50000, timeout: 20000 }
+      );
     }
   },
   computed: {
@@ -67,9 +60,27 @@ export default {
         this.coordinates.longitude
       );
       return {
-        rise: new Date(times.rise).toLocaleTimeString(),
-        set: new Date(times.set).toLocaleTimeString()
+        riseString: new Date(times.rise).toLocaleTimeString(),
+        rise: times.rise,
+        setString: new Date(times.set).toLocaleTimeString(),
+        set: times.set
       };
+    },
+    position: function() {
+      let position = SunCalc.getMoonPosition(
+        this.now,
+        this.coordinates.latitude,
+        this.coordinates.longitude
+      );
+      return position;
+    },
+    illumination: function() {
+      let illumination = SunCalc.getMoonIllumination(
+        this.now,
+        this.coordinates.latitude,
+        this.coordinates.longitude
+      );
+      return illumination;
     }
   }
 };
