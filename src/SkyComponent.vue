@@ -9,10 +9,10 @@ const d3 = require("d3");
 
 export default {
   name: "sky-component",
-  props: ["now", "position", "illumination"],
+  props: ["now", "angle", "illuminated"],
   data: function() {
     let full = {
-      width: 300,
+      width: 500,
       height: 300
     };
     let margin = {
@@ -29,11 +29,7 @@ export default {
       full: full,
       margin: margin,
       inner: inner,
-      radius: Math.min(inner.width, inner.height) / 2,
-      phase: this.illumination.phase,
-      angle:
-        ((this.illumination.angle - this.position.parallacticAngle) / Math.PI) *
-        180
+      radius: Math.min(inner.width, inner.height) / 2
     };
   },
   mounted: function() {
@@ -45,10 +41,17 @@ export default {
       .append("g")
       .attr(
         "transform",
-        `translate(${this.margin.left}, ${this.margin.top})
-        rotate(${this.angle}, ${this.inner.width / 2}, ${this.inner.height /
-          2})`
+        `translate(${this.margin.left}, ${this.margin.top}) rotate(${
+          this.angle
+        }, ${this.inner.width / 2}, ${this.inner.height / 2})`
       );
+
+    this.svg
+      .append("circle")
+      .attr("class", "orb")
+      .attr("r", this.inner.height / 2 - 25)
+      .attr("cx", this.inner.width / 2)
+      .attr("cy", this.inner.height / 2);
 
     this.svg
       .append("clipPath")
@@ -71,10 +74,17 @@ export default {
     feMerge.append("feMergeNode").attr("in", "moonShine");
 
     feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+    this.draw();
   },
   watch: {
     now: function() {
       this.draw();
+    }
+  },
+  computed: {
+    phase() {
+      return 1 - this.illuminated / 2;
     }
   },
   methods: {
@@ -84,49 +94,14 @@ export default {
         dark: []
       };
 
-      sweeps.lit.push(
-        `a ${this.radius *
-          (this.phase <= 0.5 ? 4 * Math.abs(this.phase - 0.25) : 1)},${
-          this.radius
-        } 0 0 ${this.phase <= 0.25 ? 1 : 0} 0,${2 * this.radius}`
-      );
-      sweeps.lit.push(
-        `a ${this.radius *
-          (this.phase <= 0.5 ? 1 : 4 * Math.abs(this.phase - 0.75))},${
-          this.radius
-        } 0 0 ${this.phase <= 0.75 ? 0 : 1} 0,${-2 * this.radius}`
-      );
-
-      sweeps.dark.push(
-        `a ${this.radius *
-          (this.phase <= 0.5 ? 1 : 4 * Math.abs(this.phase - 0.75))},${
-          this.radius
-        } 0 0 ${this.phase > 0.5 && this.phase <= 0.75 ? 1 : 0} 0,${2 *
-          this.radius}`
-      );
-      sweeps.dark.push(
-        `a ${this.radius *
-          (this.phase <= 0.5 ? 4 * Math.abs(this.phase - 0.25) : 1)},${
-          this.radius
-        } 0 0 ${this.phase >= 0.25 && this.phase < 0.5 ? 1 : 0} 0,${-2 *
-          this.radius}`
-      );
-
-      this.svg
-        .selectAll(".moondark")
-        .data([1])
-        .join(enter =>
-          enter
-            .append("path")
-            .attr("class", "moondark")
-            .attr("clip-path", "url(#outer-clip)")
-        )
-        .attr(
-          "d",
-          `M ${this.inner.width / 2} 
-          ${this.inner.height / 2 - this.radius} 
-          ${sweeps.dark.join(" ")}`
-        );
+      // eslint-disable-next-line
+      sweeps.lit.push(`a ${this.radius * (this.phase <= 0.5 ? 4 * Math.abs(this.phase - 0.25) : 1)}, ${this.radius} 0 0 ${this.phase <= 0.25 ? 1 : 0} 0,${2 * this.radius}`);
+      // eslint-disable-next-line
+      sweeps.lit.push(`a ${this.radius * (this.phase <= 0.5 ? 1 : 4 * Math.abs(this.phase - 0.75))}, ${this.radius} 0 0 ${this.phase <= 0.75 ? 0 : 1} 0,${-2 * this.radius}`);
+      // eslint-disable-next-line
+      sweeps.dark.push(`a ${this.radius * (this.phase <= 0.5 ? 1 : 4 * Math.abs(this.phase - 0.75))},${this.radius} 0 0 ${this.phase > 0.5 && this.phase <= 0.75 ? 1 : 0} 0,${2 * this.radius}`);
+      // eslint-disable-next-line
+      sweeps.dark.push(`a ${this.radius * (this.phase <= 0.5 ? 4 * Math.abs(this.phase - 0.25) : 1)},${this.radius} 0 0 ${this.phase >= 0.25 && this.phase < 0.5 ? 1 : 0} 0,${-2 * this.radius}`);
 
       this.svg
         .selectAll(".moonlit")
@@ -142,6 +117,22 @@ export default {
           `M ${this.inner.width / 2} 
           ${this.inner.height / 2 - this.radius} 
           ${sweeps.lit.join(" ")}`
+        );
+
+      this.svg
+        .selectAll(".moondark")
+        .data([1])
+        .join(enter =>
+          enter
+            .append("path")
+            .attr("class", "moondark")
+            .attr("clip-path", "url(#outer-clip)")
+        )
+        .attr(
+          "d",
+          `M ${this.inner.width / 2} 
+          ${this.inner.height / 2 - this.radius} 
+          ${sweeps.dark.join(" ")}`
         )
         .style("filter", "url(#glow)");
     }
@@ -151,18 +142,16 @@ export default {
 
 <style>
 .moonlit {
-  fill: yellow;
+  fill: palegoldenrod;
   stroke: none;
 }
 .moondark {
-  fill: gray;
+  fill: #444;
   stroke: none;
 }
-.sky {
-  fill: black;
-  stroke: none;
-}
-html {
-  background: black;
+.orb {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 50px;
 }
 </style>

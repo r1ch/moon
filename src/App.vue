@@ -2,35 +2,42 @@
   <div id="app">
     Moon rise today: {{ times.riseString }}<br />
     {{ now }}<br />
-    <p v-if="coordinates.default">
+    <p v-if="deviceCoordinates.default">
       I've assumed you're in London<br />
-      <a href="#" v-if="!coordinates.error" @click="locate">Update location</a>
+      <a href="#" v-if="!deviceCoordinates.error" @click="locate">
+        Update location
+      </a>
     </p>
-    <p v-if="coordinates.error">
-      {{ coordinates.error }}
+    <p v-if="deviceCoordinates.error">
+      {{ deviceCoordinates.error }}
+    </p>
+    <p v-if="!deviceCoordinates.error && !deviceCoordinates.default">
+      {{ deviceCoordinates.latitude }},{{ deviceCoordinates.longitude }}<br />
+      {{ deviceCoordinates.altitude }}m
     </p>
     <br />
     <sky-component
       :now="now"
-      :position="position"
-      :illumination="illumination"
+      :angle="angle"
+      :illuminated="illuminated"
     ></sky-component>
   </div>
 </template>
 
 <script>
 import SkyComponent from "./SkyComponent.vue";
-const SunCalc = require("suncalc");
+const A = require("meeusjs");
 
 export default {
   name: "App",
   components: { SkyComponent },
   data: () => ({
-    coordinates: {
+    deviceCoordinates: {
       default: true,
       error: false,
       latitude: 51.5074,
-      longitude: 0.1278
+      longitude: 0.1278,
+      altitude: 0
     },
     now: new Date()
   }),
@@ -43,46 +50,60 @@ export default {
     locate: function() {
       navigator.geolocation.getCurrentPosition(
         position => {
-          this.coordinates.latitude = position.coords.latitude;
-          this.coordinates.longitude = position.coords.longitude;
-          this.coordinates.default = false;
+          console.log(position);
+          this.deviceCoordinates.latitude = position.coords.latitude;
+          this.deviceCoordinates.longitude = position.coords.longitude;
+          this.deviceCoordinates.altitude = position.coords.altitude || 0;
+          this.deviceCoordinates.default = false;
         },
         error => {
-          this.coordinates.error = error.message;
+          this.deviceCoordinates.error = error.message;
         },
         { maximumAge: 50000, timeout: 20000 }
       );
     }
   },
   computed: {
-    times: function() {
-      let times = SunCalc.getMoonTimes(
-        this.now,
-        this.coordinates.latitude,
-        this.coordinates.longitude
+    jdo() {
+      return new A.JulianDay(this.now);
+    },
+    astronomicalCoordinates() {
+      return A.EclCoord.fromWgs84(
+        this.deviceCoordinates.latitude,
+        this.deviceCoordinates.longitude,
+        this.deviceCoordinates.altitide
       );
+    },
+    sunTopocentricPosition() {
+      return A.Solar.apparentTopocentric(
+        this.jdo,
+        this.astronomicalCoordinates
+      );
+    },
+    moonTopocentricPosition() {
+      return A.Moon.topocentricPosition(this.jdo, this.astronomicalCoordinates);
+    },
+    phase() {
+      return A.MoonIllum.phaseAngleEq2(
+        this.moonTopocentricPosition.eq,
+        this.sunTopocentricPosition
+      );
+    },
+    illuminated() {
+      return A.MoonIllum.illuminated(this.phase);
+    },
+    angle() {
+      return A.MoonIllum.positionAngle(
+        this.moonTopocentricPosition.eq,
+        this.sunTopocentricPosition
+      );
+    },
+    times() {
+      let times = A.Moon.times(this.jdo, this.astronomicalCoordinates);
       return {
-        riseString: new Date(times.rise).toLocaleTimeString(),
-        rise: times.rise,
-        setString: new Date(times.set).toLocaleTimeString(),
-        set: times.set
+        riseString: A.Coord.secondsToHMSStr(times.rise),
+        setString: A.Coord.secondsToHMSStr(times.set)
       };
-    },
-    position: function() {
-      let position = SunCalc.getMoonPosition(
-        this.now,
-        this.coordinates.latitude,
-        this.coordinates.longitude
-      );
-      return position;
-    },
-    illumination: function() {
-      let illumination = SunCalc.getMoonIllumination(
-        this.now,
-        this.coordinates.latitude,
-        this.coordinates.longitude
-      );
-      return illumination;
     }
   }
 };
@@ -96,5 +117,11 @@ export default {
   text-align: center;
   color: ivory;
   margin-top: 60px;
+}
+a {
+  color: ivory;
+}
+html {
+  background: midnightblue;
 }
 </style>
