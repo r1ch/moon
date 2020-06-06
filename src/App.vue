@@ -12,8 +12,8 @@
       {{ deviceCoordinates.error }}
     </p>
     <p v-if="!deviceCoordinates.error && !deviceCoordinates.default">
-      {{ deviceCoordinates.latitude }},{{ deviceCoordinates.longitude }}<br />
-      {{ deviceCoordinates.altitude }}m
+      {{ Number(deviceCoordinates.latitude).toFixed(3) }},{{ Number(deviceCoordinates.longitude).toFixed(3) }}<br />
+      {{ Number(deviceCoordinates.altitude).toFixed(3) }}m
     </p>
     <br />
     <sky-component
