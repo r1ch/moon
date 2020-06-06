@@ -12,7 +12,7 @@ export default {
   props: ["now", "angle", "illuminated"],
   data: function() {
     let full = {
-      width: 500,
+      width: 300,
       height: 300
     };
     let margin = {
