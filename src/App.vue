@@ -13,13 +13,14 @@
     </p>
     <p v-if="!deviceCoordinates.error && !deviceCoordinates.default">
       {{ Number(deviceCoordinates.latitude).toFixed(3) }},{{ Number(deviceCoordinates.longitude).toFixed(3) }}<br />
-      {{ Number(deviceCoordinates.altitude).toFixed(3) }}m
+      {{ Number(deviceCoordinates.altitude).toFixed(1) }}m
     </p>
     <br />
     <sky-component
       :now="now"
       :angle="angle"
       :illuminated="illuminated"
+      :moonPosition="moonTopocentricPosition"
     ></sky-component>
   </div>
 </template>
