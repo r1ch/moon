@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    Moon rise today: {{ times.riseString }}<br />
+    Moon rise: {{ times.rise.toLocaleTimeString() }}<br />
+    Moon set: {{ times.set.toLocaleTimeString() }}<br />
     {{ now }}<br />
     <p v-if="deviceCoordinates.default">
       I've assumed you're in London<br />
@@ -12,7 +13,9 @@
       {{ deviceCoordinates.error }}
     </p>
     <p v-if="!deviceCoordinates.error && !deviceCoordinates.default">
-      {{ Number(deviceCoordinates.latitude).toFixed(3) }},{{ Number(deviceCoordinates.longitude).toFixed(3) }}<br />
+      {{ Number(deviceCoordinates.latitude).toFixed(3) }},{{
+        Number(deviceCoordinates.longitude).toFixed(3)
+      }}<br />
       {{ Number(deviceCoordinates.altitude).toFixed(1) }}m
     </p>
     <br />
@@ -20,6 +23,7 @@
       :now="now"
       :angle="angle"
       :illuminated="illuminated"
+      :times="times"
       :moonPosition="moonTopocentricPosition"
     ></sky-component>
   </div>
@@ -101,9 +105,25 @@ export default {
     },
     times() {
       let times = A.Moon.times(this.jdo, this.astronomicalCoordinates);
+      let midnight = new Date(
+        this.now.getFullYear(),
+        this.now.getMonth(),
+        this.now.getDate() + 1,
+        0,
+        0,
+        0
+      ).getTime();
       return {
-        riseString: A.Coord.secondsToHMSStr(times.rise),
-        setString: A.Coord.secondsToHMSStr(times.set)
+        midnight: midnight,
+        rise: new Date(
+          midnight + times.rise * 1000 + times.rised * 1000 * 60 * 60 * 24
+        ),
+        transit: new Date(
+          midnight + times.transit * 1000 + times.transitd * 1000 * 60 * 60 * 24
+        ),
+        set: new Date(
+          midnight + times.set * 1000 + times.setd * 1000 * 60 * 60 * 24
+        )
       };
     }
   }
@@ -116,13 +136,12 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: ivory;
   margin-top: 60px;
 }
 a {
   color: ivory;
 }
 html {
-  background: midnightblue;
+  background: white;
 }
 </style>

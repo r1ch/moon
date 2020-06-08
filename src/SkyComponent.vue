@@ -9,40 +9,37 @@ const d3 = require("d3");
 
 export default {
   name: "sky-component",
-  props: ["now", "angle", "illuminated","moonPosition"],
+  props: ["now", "angle", "illuminated", "times", "moonPosition"],
   data: function() {
     let full = {
       width: 600,
       height: 600
     };
     let margin = {
-      top: 10,
-      left: 10,
-      right: 10,
-      bottom: 10
+      top: 20,
+      left: 20,
+      right: 20,
+      bottom: 20
     };
     let inner = {
       width: full.width - margin.left - margin.right,
       height: full.height - margin.top - margin.bottom
     };
     let moon = {
-      radius: inner.width/8,
+      radius: inner.width / 8
     };
-    moon.offset = [inner.width/2-moon.radius, 0].join(",");
-    let orb = {
-      radius: inner.height/3
-    };
-    let tiny = {
+    moon.offset = [inner.width / 2 - moon.radius, 0].join(",");
+    let horizon = {
+      width: inner.width,
+      offset: [0, inner.height * 0.8].join(","),
       radius: 10
     };
-    orb.offset = [inner.width/2-orb.radius, inner.height-2*orb.radius].join(",")
     return {
       full: full,
       margin: margin,
       inner: inner,
       moon: moon,
-      orb:orb,
-      tiny:tiny
+      horizon: horizon
     };
   },
   mounted: function() {
@@ -52,13 +49,16 @@ export default {
       .attr("width", this.full.width)
       .attr("height", this.full.height)
       .append("g")
-      .attr("transform",`translate(${this.margin.left},${this.margin.top})`)
-      
-    this.disk = this.svg
-      .append("g")
-      .attr("transform",`translate(${this.moon.offset}) rotate(${this.angle}, ${this.moon.radius}, ${this.moon.radius})`);
+      .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-    this.disk
+    this.moonSvg = this.svg
+      .append("g")
+      .attr(
+        "transform",
+        `translate(${this.moon.offset}) rotate(${this.angle}, ${this.moon.radius}, ${this.moon.radius})`
+      );
+
+    this.moonSvg
       .append("clipPath")
       .attr("id", "outer-clip")
       .append("circle")
@@ -66,21 +66,9 @@ export default {
       .attr("cx", this.moon.radius)
       .attr("cy", this.moon.radius);
 
-    this.orbit = this.svg
+    this.horizonSvg = this.svg
       .append("g")
-      .attr("transform",`translate(${this.orb.offset})`);
-
-    this.orbit
-      .append("path")
-      .attr("d",`M 0 ${this.orb.radius} l ${this.orb.radius*2} 0`)
-      .attr("class","horizon")
-
-    this.orbit
-      .append("circle")
-      .attr("class","orbit")
-      .attr("r", this.orb.radius)
-      .attr("cx", this.orb.radius)
-      .attr("cy", this.orb.radius);
+      .attr("transform", `translate(${this.horizon.offset})`);
 
     let defs = this.svg.append("defs");
     let filter = defs.append("filter").attr("id", "glow");
@@ -100,19 +88,17 @@ export default {
   },
   watch: {
     now: function() {
-      console.log(this.moonPosition)
       this.draw();
     }
   },
   computed: {
     phase() {
-      let phase =  1 - this.illuminated / 2;
-      console.log(phase,this.illuminated)
-      return phase
+      let phase = 1 - this.illuminated / 2;
+      return phase;
     }
   },
   methods: {
-    sweeps: function(radius,phase){
+    sweeps: function(radius, phase) {
       let sweeps = {
         lit: [`M ${radius} 0`],
         dark: [`M ${radius} 0`]
@@ -126,13 +112,13 @@ export default {
       sweeps.dark.push(`a ${radius * (phase <= 0.5 ? 1 : 4 * Math.abs(phase - 0.75))},${radius} 0 0 ${phase > 0.5 && phase <= 0.75 ? 1 : 0} 0,${2 * radius}`);
       // eslint-disable-next-line
       sweeps.dark.push(`a ${radius * (phase <= 0.5 ? 4 * Math.abs(phase - 0.25) : 1)},${radius} 0 0 ${phase >= 0.25 && phase < 0.5 ? 1 : 0} 0,${-2 * radius}`);
-      return sweeps
+      return sweeps;
     },
     draw: function() {
       let moonSweeps = this.sweeps(this.moon.radius, this.phase);
-      let tinySweeps = this.sweeps(this.tiny.radius, this.phase);
+      let horizonSweeps = this.sweeps(this.horizon.radius, this.phase);
 
-      this.disk
+      this.moonSvg
         .selectAll(".moonlit")
         .data([1])
         .join(enter =>
@@ -141,9 +127,9 @@ export default {
             .attr("class", "moonlit")
             .attr("clip-path", "url(#outer-clip)")
         )
-        .attr("d",`${moonSweeps.lit.join(" ")}`);
+        .attr("d", `${moonSweeps.lit.join(" ")}`);
 
-      this.disk
+      this.moonSvg
         .selectAll(".moondark")
         .data([1])
         .join(enter =>
@@ -152,19 +138,57 @@ export default {
             .attr("class", "moondark")
             .attr("clip-path", "url(#outer-clip)")
         )
-        .attr("d",`${moonSweeps.dark.join(" ")}`)
+        .attr("d", `${moonSweeps.dark.join(" ")}`)
         .style("filter", "url(#glow)");
 
-      this.orbit
-        .selectAll(".tiny")
+      let horizonScale = d3
+        .scaleTime()
+        .domain([this.now, this.times.set])
+        .range([0, this.horizon.width]);
+
+      let horizonAxis = d3.axisBottom().scale(horizonScale);
+
+      this.horizonSvg
+        .selectAll(".tinydark")
         .data([1])
-        .join(enter =>
-          enter
-            .append("path")
-            .attr("class","tiny")
-        )
-        .attr("d",`${tinySweeps.lit.join(" ")}`)
-        .attr("transform",`translate(${-this.tiny.radius},${this.orb.radius-this.tiny.radius})`)
+        .join(enter => enter.append("path").attr("class", "tinydark"))
+        .attr("d", `${horizonSweeps.dark.join(" ")}`)
+        .attr(
+          "transform",
+          `translate(${horizonScale(this.now) - this.horizon.radius},${-90 *
+            this.moonPosition.hz.alt -
+            this.horizon.radius})`
+        );
+
+      this.horizonSvg
+        .selectAll(".tinylit")
+        .data([1])
+        .join(enter => enter.append("path").attr("class", "tinylit"))
+        .attr("d", `${horizonSweeps.lit.join(" ")}`)
+        .attr(
+          "transform",
+          `translate(${horizonScale(this.now) - this.horizon.radius},${-90 *
+            this.moonPosition.hz.alt -
+            this.horizon.radius})`
+        );
+
+      this.horizonSvg
+        .selectAll(".axis")
+        .data([1])
+        .join(enter => enter.append("g").attr("class", "axis"))
+        .call(horizonAxis);
+
+      this.horizonSvg
+        .selectAll(".risePath")
+        .data([1])
+        .join(enter => enter.append("path").attr("class", "risePath"))
+        .attr(
+          "d",
+          `M ${horizonScale(this.times.rise)} 0
+        C ${horizonScale(this.times.rise)} 0
+        ${horizonScale(this.times.transit)} -100
+        ${horizonScale(this.times.set)} 0`
+        );
     }
   }
 };
@@ -172,27 +196,32 @@ export default {
 
 <style>
 .moonlit {
-  fill: palegoldenrod;
-  stroke: none;
+  fill: white;
+  stroke: black;
 }
 .moondark {
   fill: #444;
-  stroke: none;
+  stroke: ;
 }
 .orbit {
   fill: none;
-  stroke: white;  
+  stroke: black;
   stroke-width: 1px;
-  stroke-dasharray: 2 2
+  stroke-dasharray: 2 2;
 }
-.horizon {
-  stroke: white;
+
+.tinylit {
+  fill: white;
+  stroke: black;
   stroke-width: 1px;
-    stroke-dasharray: 2 8
 }
-.tiny {
-  fill: midnightblue;
-  stroke: white;
+.tinydark {
+  fill: black;
+  stroke: none;
+}
+.risePath {
+  fill: none;
+  stroke: black;
   stroke-width: 1px;
 }
 </style>
