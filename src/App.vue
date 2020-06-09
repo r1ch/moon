@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    Rise {{ this.nextRise.time.toLocaleTimeString() }}<br />
-    Set {{ this.nextSet.time.toLocaleTimeString() }}<br />
+    Rise {{ this.nextRise.time.toLocaleString() }}<br />
+    Set {{ this.nextSet.time.toLocaleString() }}<br />
     {{ now }}<br />
     <p v-if="deviceCoordinates.default">
       I've assumed you're in London<br />
