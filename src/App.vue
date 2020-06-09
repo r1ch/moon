@@ -192,7 +192,7 @@ export default {
   margin-top: 60px;
 }
 a {
-  color: ivory;
+  color: black;
 }
 html {
   background: white;
