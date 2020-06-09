@@ -151,8 +151,8 @@ export default {
 
       let altitudeScale = d3
         .scaleLinear()
-        .domain([this.times.minAltitude, this.times.maxAltitude])
-        .range([50, 0]);
+        .domain([-1*this.times.absAlt, this.times.absAlt])
+        .range([50, -50]);
 
       let horizonAxis = d3.axisBottom().scale(horizonScale);
 
@@ -184,9 +184,10 @@ export default {
         .data([1])
         .join(enter => enter.append("path").attr("class", "tinydark"))
         .attr("d", `${horizonSweeps.dark.join(" ")}`)
+        .attr("transform-origin","center")
         .attr(
           "transform",
-          `translate(${horizonScale(this.now) - this.horizon.radius},${altitudeScale(this.currentPosition.alt) - this.horizon.radius})`
+          `translate(${horizonScale(this.now)},${altitudeScale(this.currentPosition.alt)})`
         );*/
 
       this.horizonSvg
@@ -196,9 +197,7 @@ export default {
         .attr("d", `${horizonSweeps.lit.join(" ")}`)
         .attr(
           "transform",
-          `translate(${horizonScale(this.now) -
-            this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
-            this.horizon.radius})`
+          `translate(${horizonScale(this.now)-this.horizon.radius},${altitudeScale(this.currentPosition.alt)- this.horizon.radius})`
         );
     }
   }

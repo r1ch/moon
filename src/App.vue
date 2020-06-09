@@ -152,7 +152,7 @@ export default {
         rise: [],
         set: []
       };
-      let running = { position: false, min: 0, max: 0 };
+      let running = { position: false, absAlt: 0};
       let detail = [...Array(steps)].map((_, i) => {
         let time = new Date(this.midnight.previous + i * step);
         let position = A.Moon.topocentricPosition(
@@ -170,12 +170,10 @@ export default {
           position.alt > 0 ? times.rise.push(entry) : times.set.push(entry);
         }
         running.position = position;
-        running.min = Math.min(running.min, position.alt);
-        running.max = Math.max(running.min, position.alt);
+        running.absAlt = Math.max(running.absAlt, Math.abs(position.alt))
         return entry;
       });
-      times.minAltitude = running.min;
-      times.maxAltitude = running.max;
+      times.absAlt = running.absAlt
       times.detail = [...detail];
       return times;
     }
