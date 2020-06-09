@@ -9,7 +9,7 @@ const d3 = require("d3");
 
 export default {
   name: "sky-component",
-  props: ["now", "angle", "illuminated", "times", "moonPosition"],
+  props: ["now", "angle", "illuminated", "times", "currentPosition"],
   data: function() {
     let full = {
       width: 600,
@@ -143,34 +143,29 @@ export default {
 
       let horizonScale = d3
         .scaleTime()
-        .domain([this.now, this.times.set])
+        .domain([
+          this.times.detail[0].time,
+          this.times.detail[this.times.detail.length - 1].time
+        ])
         .range([0, this.horizon.width]);
+
+      let altitudeScale = d3
+        .scaleLinear()
+        .domain([this.times.minAltitude, this.times.maxAltitude])
+        .range([50, 0]);
 
       let horizonAxis = d3.axisBottom().scale(horizonScale);
 
-      this.horizonSvg
-        .selectAll(".tinydark")
-        .data([1])
-        .join(enter => enter.append("path").attr("class", "tinydark"))
-        .attr("d", `${horizonSweeps.dark.join(" ")}`)
-        .attr(
-          "transform",
-          `translate(${horizonScale(this.now) - this.horizon.radius},${-90 *
-            this.moonPosition.hz.alt -
-            this.horizon.radius})`
-        );
-
-      this.horizonSvg
-        .selectAll(".tinylit")
-        .data([1])
-        .join(enter => enter.append("path").attr("class", "tinylit"))
-        .attr("d", `${horizonSweeps.lit.join(" ")}`)
-        .attr(
-          "transform",
-          `translate(${horizonScale(this.now) - this.horizon.radius},${-90 *
-            this.moonPosition.hz.alt -
-            this.horizon.radius})`
-        );
+      let lineGenerator = entries => {
+        let curve = entries
+          .map(
+            d => `L ${horizonScale(d.time)} ${altitudeScale(d.position.alt)}`
+          )
+          .join(" ");
+        return `M ${horizonScale(entries[0].time)} ${altitudeScale(
+          entries[0].position.alt
+        )}  ${curve}`;
+      };
 
       this.horizonSvg
         .selectAll(".axis")
@@ -180,14 +175,30 @@ export default {
 
       this.horizonSvg
         .selectAll(".risePath")
-        .data([1])
+        .data([this.times.detail])
         .join(enter => enter.append("path").attr("class", "risePath"))
+        .attr("d", d => lineGenerator(d));
+
+      /*this.horizonSvg
+        .selectAll(".tinydark")
+        .data([1])
+        .join(enter => enter.append("path").attr("class", "tinydark"))
+        .attr("d", `${horizonSweeps.dark.join(" ")}`)
         .attr(
-          "d",
-          `M ${horizonScale(this.times.rise)} 0
-        C ${horizonScale(this.times.rise)} 0
-        ${horizonScale(this.times.transit)} -100
-        ${horizonScale(this.times.set)} 0`
+          "transform",
+          `translate(${horizonScale(this.now) - this.horizon.radius},${altitudeScale(this.currentPosition.alt) - this.horizon.radius})`
+        );*/
+
+      this.horizonSvg
+        .selectAll(".tinylit")
+        .data([1])
+        .join(enter => enter.append("path").attr("class", "tinylit"))
+        .attr("d", `${horizonSweeps.lit.join(" ")}`)
+        .attr(
+          "transform",
+          `translate(${horizonScale(this.now) -
+            this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
+            this.horizon.radius})`
         );
     }
   }
@@ -211,7 +222,7 @@ export default {
 }
 
 .tinylit {
-  fill: white;
+  fill: rgba(255, 255, 255, 0.75);
   stroke: black;
   stroke-width: 1px;
 }

@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    Moon rise: {{ times.rise.toLocaleTimeString() }}<br />
-    Moon set: {{ times.set.toLocaleTimeString() }}<br />
+    Rise {{ this.nextRise.time.toLocaleTimeString() }}<br />
+    Set {{ this.nextSet.time.toLocaleTimeString() }}<br />
     {{ now }}<br />
     <p v-if="deviceCoordinates.default">
       I've assumed you're in London<br />
@@ -24,7 +24,7 @@
       :angle="angle"
       :illuminated="illuminated"
       :times="times"
-      :moonPosition="moonTopocentricPosition"
+      :currentPosition="currentPosition"
     ></sky-component>
   </div>
 </template>
@@ -103,28 +103,81 @@ export default {
         this.sunTopocentricPosition
       );
     },
-    times() {
-      let times = A.Moon.times(this.jdo, this.astronomicalCoordinates);
-      let midnight = new Date(
-        this.now.getFullYear(),
-        this.now.getMonth(),
-        this.now.getDate() + 1,
-        0,
-        0,
-        0
-      ).getTime();
+    midnight() {
       return {
-        midnight: midnight,
-        rise: new Date(
-          midnight + times.rise * 1000 + times.rised * 1000 * 60 * 60 * 24
-        ),
-        transit: new Date(
-          midnight + times.transit * 1000 + times.transitd * 1000 * 60 * 60 * 24
-        ),
-        set: new Date(
-          midnight + times.set * 1000 + times.setd * 1000 * 60 * 60 * 24
-        )
+        previous: new Date(
+          this.now.getFullYear(),
+          this.now.getMonth(),
+          this.now.getDate(),
+          0,
+          0,
+          0
+        ).getTime(),
+        now: new Date(
+          this.now.getFullYear(),
+          this.now.getMonth(),
+          this.now.getDate() + 1,
+          0,
+          0,
+          0
+        ).getTime(),
+        next: new Date(
+          this.now.getFullYear(),
+          this.now.getMonth(),
+          this.now.getDate() + 2,
+          0,
+          0,
+          0
+        ).getTime()
       };
+    },
+    currentPosition() {
+      return A.Moon.topocentricPosition(this.jdo, this.astronomicalCoordinates)
+        .hz;
+    },
+    nextRise() {
+      return this.times.rise.find(
+        rise => rise.time.getTime() > this.now.getTime()
+      );
+    },
+    nextSet() {
+      return this.times.set.find(
+        set => set.time.getTime() > this.now.getTime()
+      );
+    },
+    times() {
+      let steps = 24 * 60 * 2;
+      let step = (this.midnight.next - this.midnight.previous) / steps;
+      let times = {
+        rise: [],
+        set: []
+      };
+      let running = { position: false, min: 0, max: 0 };
+      let detail = [...Array(steps)].map((_, i) => {
+        let time = new Date(this.midnight.previous + i * step);
+        let position = A.Moon.topocentricPosition(
+          new A.JulianDay(new Date(this.midnight.previous + i * step)),
+          this.astronomicalCoordinates
+        ).hz;
+        let entry = {
+          time: time,
+          position: position
+        };
+        if (
+          running.position &&
+          Math.sign(running.position.alt) != Math.sign(position.alt)
+        ) {
+          position.alt > 0 ? times.rise.push(entry) : times.set.push(entry);
+        }
+        running.position = position;
+        running.min = Math.min(running.min, position.alt);
+        running.max = Math.max(running.min, position.alt);
+        return entry;
+      });
+      times.minAltitude = running.min;
+      times.maxAltitude = running.max;
+      times.detail = [...detail];
+      return times;
     }
   }
 };
