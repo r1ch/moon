@@ -8,15 +8,15 @@
       </tr>
       <tr>
         <td>
-          {{ this.nextSet.time.toLocaleTimeString() }}<br />
+          {{ this.nextRise.time.toLocaleTimeString() }}<br />
           <small>{{
-            this.nextSet.time.getDate() == this.now.getDate()
+            this.nextRise.time.getDate() == this.now.getDate()
               ? "today"
               : "tomorrow"
           }}</small>
         </td>
         <td>
-          {{ this.nextRise.time.toLocaleTimeString() }}<br />
+          {{ this.nextSet.time.toLocaleTimeString() }}<br />
           <small>{{
             this.nextSet.time.getDate() == this.now.getDate()
               ? "today"
