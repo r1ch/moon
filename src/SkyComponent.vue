@@ -11,9 +11,9 @@ export default {
   name: "sky-component",
   props: ["now", "angle", "illuminated", "times", "currentPosition"],
   data: function() {
-    let full = {
-      width: 600,
-      height: 600
+    let moonFull = {
+      width: 100,
+      height: 100
     };
     let margin = {
       top: 20,
@@ -21,25 +21,36 @@ export default {
       right: 20,
       bottom: 20
     };
-    let inner = {
-      width: full.width - margin.left - margin.right,
-      height: full.height - margin.top - margin.bottom
+    let horizonFull = {
+      width: 600,
+      height:200
+    };
+    let moonInner = {
+      width: moonFull.width - margin.left - margin.right,
+      height: moonFull.height - margin.top - margin.bottom
     };
     let moon = {
       radius: inner.width / 8
     };
-    moon.offset = [inner.width / 2 - moon.radius, 0].join(",");
+    moon.offset = [moonInner.width / 2 - moon.radius, 0].join(",");
     let horizon = {
-      width: inner.width,
-      offset: [0, inner.height * 0.8].join(","),
-      radius: 10
+      height: 200,
+      width: inner.width
     };
+    let horizonInner = {
+      width: horizonFull.width - margin.left - margin.right,
+      height: horizonFull.height - margin.top - margin.bottom
+    };
+    horizon.offset = [0, horizonInner.height - horizonInner.height].join(",");
+    horizon.radius = 10;
     return {
-      full: full,
-      margin: margin,
-      inner: inner,
+      moonFull: moonFull,
+      moonInner: moonFull,
       moon: moon,
-      horizon: horizon
+      horizonFull: horizonFull,
+      horizonInner: horizonInner,
+      horizon: horizon,
+      margin: margin,
     };
   },
   mounted: function() {
@@ -152,7 +163,7 @@ export default {
       let altitudeScale = d3
         .scaleLinear()
         .domain([-1*this.times.absAlt, this.times.absAlt])
-        .range([50, -50]);
+        .range([this.horizon.height/2, this.horizon.height/-2]);
 
       let horizonAxis = d3.axisBottom().scale(horizonScale);
 
@@ -167,6 +178,28 @@ export default {
         )}  ${curve}`;
       };
 
+      //let cardinalPoints = ["S","SSE","SE","ESE","E","ENE","NE","NNE","N","NNW","NW","WNW","W","WSW","SW","SSW","S"]
+      let cardinalPoints = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW","N"]
+      let cardinals = cardinalPoints.map((point,i)=>({
+        point:point,
+        az: ((i/(cardinalPoints.length-1)) - 0.5) * 2 * Math.PI
+      }))
+
+      let cardinalFor = (point)=>{
+        return cardinals.reduce((previous,current)=>{
+          return Math.abs(current.az - point.az) < Math.abs(previous.az - point.az) ? current : previous
+        },cardinals[0])
+      }
+
+      this.horizonSvg
+        .selectAll(".cardinal")
+        .data([...this.times.rise, ... this.times.set])
+        .join(enter => enter.append("text").attr("class","cardinal"))
+        .text(d=>cardinalFor(d.position).point)
+        .attr("x",d=>horizonScale(d.time))
+        .attr("y",this.horizon.height/-8)
+
+
       this.horizonSvg
         .selectAll(".axis")
         .data([1])
@@ -179,7 +212,7 @@ export default {
         .join(enter => enter.append("path").attr("class", "risePath"))
         .attr("d", d => lineGenerator(d));
 
-      /*this.horizonSvg
+      this.horizonSvg
         .selectAll(".tinydark")
         .data([1])
         .join(enter => enter.append("path").attr("class", "tinydark"))
@@ -187,8 +220,8 @@ export default {
         .attr("transform-origin","center")
         .attr(
           "transform",
-          `translate(${horizonScale(this.now)},${altitudeScale(this.currentPosition.alt)})`
-        );*/
+          `translate(${horizonScale(this.now)-this.horizon.radius},${altitudeScale(this.currentPosition.alt)-this.horizon.radius})`
+        );
 
       this.horizonSvg
         .selectAll(".tinylit")
@@ -197,22 +230,44 @@ export default {
         .attr("d", `${horizonSweeps.lit.join(" ")}`)
         .attr(
           "transform",
-          `translate(${horizonScale(this.now)-this.horizon.radius},${altitudeScale(this.currentPosition.alt)- this.horizon.radius})`
+          `translate(${horizonScale(this.now)-this.horizon.radius},${altitudeScale(this.currentPosition.alt)-this.horizon.radius})`
         );
+
+      this.horizonSvg
+        .selectAll(".tinycardinal")
+        .data([this.currentPosition])
+        .join(enter => enter.append("text").attr("class", "tinycardinal"))
+        .text(d=>cardinalFor(d).point)
+        .attr("x",d=>horizonScale(this.now))
+        .attr("y",d=>altitudeScale(d.alt)+2*this.horizon.radius)
     }
   }
 };
 </script>
 
 <style>
+
+#d3{
+  width: 100%;
+  overflow:scroll;
+  text-align:center;
+}
+
+svg{
+  display: block;
+  margin:auto;
+}
+
 .moonlit {
   fill: white;
   stroke: black;
 }
+
 .moondark {
   fill: #444;
-  stroke: ;
+  stroke: none;
 }
+
 .orbit {
   fill: none;
   stroke: black;
@@ -225,13 +280,25 @@ export default {
   stroke: black;
   stroke-width: 1px;
 }
+
 .tinydark {
-  fill: black;
-  stroke: none;
+  fill: rgba(0, 0, 0, 0.5);
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 1px;
 }
+
 .risePath {
   fill: none;
   stroke: black;
   stroke-width: 1px;
+}
+
+.cardinal {
+  text-anchor: middle
+}
+
+.tinycardinal {
+  text-anchor: middle;
+  font-size: 10px;
 }
 </style>
