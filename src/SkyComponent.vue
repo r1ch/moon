@@ -175,16 +175,10 @@ export default {
 
       let horizonAxis = d3.axisBottom().scale(horizonScale);
 
-      let lineGenerator = entries => {
-        let curve = entries
-          .map(
-            d => `L ${horizonScale(d.time)} ${altitudeScale(d.position.alt)}`
-          )
-          .join(" ");
-        return `M ${horizonScale(entries[0].time)} ${altitudeScale(
-          entries[0].position.alt
-        )}  ${curve}`;
-      };
+      let risePath = d3
+        .line()
+        .x(d => horizonScale(d.time))
+        .y(d => altitudeScale(d.position.alt));
 
       //let cardinalPoints = ["S","SSE","SE","ESE","E","ENE","NE","NNE","N","NNW","NW","WNW","W","WSW","SW","SSW","S"]
       let cardinalPoints = [
@@ -238,7 +232,7 @@ export default {
         .selectAll(".risePath")
         .data([this.times.detail])
         .join(enter => enter.append("path").attr("class", "risePath"))
-        .attr("d", d => lineGenerator(d));
+        .attr("d", d => risePath(d));
 
       this.horizonSvg
         .selectAll(".tinydark")
@@ -307,7 +301,7 @@ svg {
 }
 
 .tinylit {
-  fill: rgba(255, 255, 255, 0.75);
+  fill: rgba(255, 255, 255, 0.5);
   stroke: black;
   stroke-width: 1px;
 }
@@ -319,9 +313,10 @@ svg {
 }
 
 .risePath {
-  fill: none;
   stroke: black;
+  fill: none;
   stroke-width: 1px;
+  stroke-dasharray: 1 1;
 }
 
 .cardinal {

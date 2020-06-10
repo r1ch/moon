@@ -1,10 +1,31 @@
 <template>
   <div id="app">
-    Rise:&nbsp;&nbsp;{{ this.nextRise.time.toLocaleString() }}
-    <br />
-    Set:&nbsp;{{ this.nextSet.time.toLocaleString() }}
-    <br />
-    Now:&nbsp;{{ now.toLocaleString() }}
+    {{ this.now.toLocaleTimeString() }}<br />
+    <table>
+      <tr>
+        <td>Rise</td>
+        <td>Set</td>
+      </tr>
+      <tr>
+        <td>
+          {{ this.nextSet.time.toLocaleTimeString() }}<br />
+          <small>{{
+            this.nextSet.time.getDate() == this.now.getDate()
+              ? "today"
+              : "tomorrow"
+          }}</small>
+        </td>
+        <td>
+          {{ this.nextRise.time.toLocaleTimeString() }}<br />
+          <small>{{
+            this.nextSet.time.getDate() == this.now.getDate()
+              ? "today"
+              : "tomorrow"
+          }}</small>
+        </td>
+      </tr>
+    </table>
+
     <br />
     <p v-if="deviceCoordinates.default">
       I've assumed you're in London
@@ -15,9 +36,8 @@
     </p>
     <p v-if="deviceCoordinates.error">{{ deviceCoordinates.error }}</p>
     <p v-if="!deviceCoordinates.error && !deviceCoordinates.default">
-      Lat, Lng: {{ Number(deviceCoordinates.latitude).toFixed(3) }}, {{
-        Number(deviceCoordinates.longitude).toFixed(3)
-      }}
+      Lat, Lng: {{ Number(deviceCoordinates.latitude).toFixed(3) }},
+      {{ Number(deviceCoordinates.longitude).toFixed(3) }}
       <br />
       Height above sea: {{ Number(deviceCoordinates.altitude).toFixed(1) }}m
     </p>
@@ -190,6 +210,12 @@ export default {
 </script>
 
 <style>
+table {
+  margin: auto;
+}
+td {
+  padding: 0 10px;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
