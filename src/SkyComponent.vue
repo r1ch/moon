@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div id="d3"></div>
+    <div id="d3">
+      <div id="moon"></div>
+      <div id="horizon"></div>
+    </div>
   </div>
 </template>
 
@@ -11,38 +14,39 @@ export default {
   name: "sky-component",
   props: ["now", "angle", "illuminated", "times", "currentPosition"],
   data: function() {
-    let moonFull = {
-      width: 100,
-      height: 100
-    };
     let margin = {
       top: 20,
       left: 20,
       right: 20,
       bottom: 20
     };
-    let horizonFull = {
-      width: 600,
-      height:200
+
+    let moonFull = {
+      width: 200,
+      height: 200
     };
     let moonInner = {
       width: moonFull.width - margin.left - margin.right,
       height: moonFull.height - margin.top - margin.bottom
     };
     let moon = {
-      radius: inner.width / 8
+      radius: moonInner.width / 2
     };
     moon.offset = [moonInner.width / 2 - moon.radius, 0].join(",");
-    let horizon = {
-      height: 200,
-      width: inner.width
+
+    let horizonFull = {
+      width: 900,
+      height: 200
     };
     let horizonInner = {
       width: horizonFull.width - margin.left - margin.right,
       height: horizonFull.height - margin.top - margin.bottom
     };
-    horizon.offset = [0, horizonInner.height - horizonInner.height].join(",");
-    horizon.radius = 10;
+    let horizon = {
+      radius: 10
+    };
+    horizon.offset = [0, horizonInner.height / 2].join(",");
+
     return {
       moonFull: moonFull,
       moonInner: moonFull,
@@ -50,19 +54,17 @@ export default {
       horizonFull: horizonFull,
       horizonInner: horizonInner,
       horizon: horizon,
-      margin: margin,
+      margin: margin
     };
   },
   mounted: function() {
-    this.svg = d3
-      .select("#d3")
+    this.moonSvg = d3
+      .select("#moon")
       .append("svg")
-      .attr("width", this.full.width)
-      .attr("height", this.full.height)
+      .attr("width", this.moonFull.width)
+      .attr("height", this.moonFull.height)
       .append("g")
-      .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
-
-    this.moonSvg = this.svg
+      .attr("transform", `translate(${this.margin.left},${this.margin.top})`)
       .append("g")
       .attr(
         "transform",
@@ -77,11 +79,17 @@ export default {
       .attr("cx", this.moon.radius)
       .attr("cy", this.moon.radius);
 
-    this.horizonSvg = this.svg
+    this.horizonSvg = d3
+      .select("#horizon")
+      .append("svg")
+      .attr("width", this.horizonFull.width)
+      .attr("height", this.horizonFull.height)
+      .append("g")
+      .attr("transform", `translate(${this.margin.left},${this.margin.top})`)
       .append("g")
       .attr("transform", `translate(${this.horizon.offset})`);
 
-    let defs = this.svg.append("defs");
+    let defs = this.moonSvg.append("defs");
     let filter = defs.append("filter").attr("id", "glow");
 
     filter
@@ -158,12 +166,12 @@ export default {
           this.times.detail[0].time,
           this.times.detail[this.times.detail.length - 1].time
         ])
-        .range([0, this.horizon.width]);
+        .range([0, this.horizonInner.width]);
 
       let altitudeScale = d3
         .scaleLinear()
-        .domain([-1*this.times.absAlt, this.times.absAlt])
-        .range([this.horizon.height/2, this.horizon.height/-2]);
+        .domain([-1 * this.times.absAlt, this.times.absAlt])
+        .range([this.horizonInner.height / 2, this.horizonInner.height / -2]);
 
       let horizonAxis = d3.axisBottom().scale(horizonScale);
 
@@ -179,26 +187,46 @@ export default {
       };
 
       //let cardinalPoints = ["S","SSE","SE","ESE","E","ENE","NE","NNE","N","NNW","NW","WNW","W","WSW","SW","SSW","S"]
-      let cardinalPoints = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW","N"]
-      let cardinals = cardinalPoints.map((point,i)=>({
-        point:point,
-        az: ((i/(cardinalPoints.length-1)) - 0.5) * 2 * Math.PI
-      }))
+      let cardinalPoints = [
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
+        "N"
+      ];
+      let cardinals = cardinalPoints.map((point, i) => ({
+        point: point,
+        az: (i / (cardinalPoints.length - 1) - 0.5) * 2 * Math.PI
+      }));
 
-      let cardinalFor = (point)=>{
-        return cardinals.reduce((previous,current)=>{
-          return Math.abs(current.az - point.az) < Math.abs(previous.az - point.az) ? current : previous
-        },cardinals[0])
-      }
+      let cardinalFor = point => {
+        return cardinals.reduce((previous, current) => {
+          return Math.abs(current.az - point.az) <
+            Math.abs(previous.az - point.az)
+            ? current
+            : previous;
+        }, cardinals[0]);
+      };
 
       this.horizonSvg
         .selectAll(".cardinal")
-        .data([...this.times.rise, ... this.times.set])
-        .join(enter => enter.append("text").attr("class","cardinal"))
-        .text(d=>cardinalFor(d.position).point)
-        .attr("x",d=>horizonScale(d.time))
-        .attr("y",this.horizon.height/-8)
-
+        .data([...this.times.rise, ...this.times.set])
+        .join(enter => enter.append("text").attr("class", "cardinal"))
+        .text(d => cardinalFor(d.position).point)
+        .attr("x", d => horizonScale(d.time))
+        .attr("y", this.horizonInner.height / -8);
 
       this.horizonSvg
         .selectAll(".axis")
@@ -217,10 +245,12 @@ export default {
         .data([1])
         .join(enter => enter.append("path").attr("class", "tinydark"))
         .attr("d", `${horizonSweeps.dark.join(" ")}`)
-        .attr("transform-origin","center")
+        .attr("transform-origin", "center")
         .attr(
           "transform",
-          `translate(${horizonScale(this.now)-this.horizon.radius},${altitudeScale(this.currentPosition.alt)-this.horizon.radius})`
+          `translate(${horizonScale(this.now) -
+            this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
+            this.horizon.radius})`
         );
 
       this.horizonSvg
@@ -230,32 +260,33 @@ export default {
         .attr("d", `${horizonSweeps.lit.join(" ")}`)
         .attr(
           "transform",
-          `translate(${horizonScale(this.now)-this.horizon.radius},${altitudeScale(this.currentPosition.alt)-this.horizon.radius})`
+          `translate(${horizonScale(this.now) -
+            this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
+            this.horizon.radius})`
         );
 
       this.horizonSvg
         .selectAll(".tinycardinal")
         .data([this.currentPosition])
         .join(enter => enter.append("text").attr("class", "tinycardinal"))
-        .text(d=>cardinalFor(d).point)
-        .attr("x",d=>horizonScale(this.now))
-        .attr("y",d=>altitudeScale(d.alt)+2*this.horizon.radius)
+        .text(d => cardinalFor(d).point)
+        .attr("x", horizonScale(this.now))
+        .attr("y", d => altitudeScale(d.alt) + 2 * this.horizon.radius);
     }
   }
 };
 </script>
 
 <style>
-
-#d3{
+#horizon {
   width: 100%;
-  overflow:scroll;
-  text-align:center;
+  overflow: scroll;
+  text-align: center;
 }
 
-svg{
+svg {
   display: block;
-  margin:auto;
+  margin: auto;
 }
 
 .moonlit {
@@ -294,7 +325,7 @@ svg{
 }
 
 .cardinal {
-  text-anchor: middle
+  text-anchor: middle;
 }
 
 .tinycardinal {

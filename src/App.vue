@@ -1,23 +1,25 @@
 <template>
   <div id="app">
-    Next rise {{ this.nextRise.time.toLocaleString() }}
+    Rise:&nbsp;&nbsp;{{ this.nextRise.time.toLocaleString() }}
     <br />
-    Next set {{ this.nextSet.time.toLocaleString() }}
+    Set:&nbsp;{{ this.nextSet.time.toLocaleString() }}
     <br />
-    {{ now }}
+    Now:&nbsp;{{ now.toLocaleString() }}
     <br />
     <p v-if="deviceCoordinates.default">
       I've assumed you're in London
       <br />
-      <a href="#" v-if="!deviceCoordinates.error" @click="locate">Update location</a>
+      <a href="#" v-if="!deviceCoordinates.error" @click="locate"
+        >Update location</a
+      >
     </p>
     <p v-if="deviceCoordinates.error">{{ deviceCoordinates.error }}</p>
     <p v-if="!deviceCoordinates.error && !deviceCoordinates.default">
-      {{ Number(deviceCoordinates.latitude).toFixed(3) }},{{
-      Number(deviceCoordinates.longitude).toFixed(3)
+      Lat, Lng: {{ Number(deviceCoordinates.latitude).toFixed(3) }}, {{
+        Number(deviceCoordinates.longitude).toFixed(3)
       }}
       <br />
-      {{ Number(deviceCoordinates.altitude).toFixed(1) }}m
+      Height above sea: {{ Number(deviceCoordinates.altitude).toFixed(1) }}m
     </p>
     <br />
     <sky-component
@@ -47,28 +49,42 @@ export default {
     },
     day: new Date().getDate(),
     now: new Date(),
-    midnight: false,
+    midnight: false
   }),
   created: function() {
-    this.midnight = this.calculateMidnight()
+    this.midnight = this.calculateMidnight();
     setInterval(() => {
       let date = new Date();
-      if(date.getDate() != this.day) this.day = date.getDate()
-      this.now = date
+      if (date.getDate() != this.day) this.day = date.getDate();
+      this.now = date;
     }, 1000);
   },
   watch: {
-    "day": function(){
-     this.midnight =  this.calculateMidnight()
+    day: function() {
+      this.midnight = this.calculateMidnight();
     }
   },
   methods: {
-    calculateMidnight: function(){
-      console.log("Update to midnight")
+    calculateMidnight: function() {
+      console.log("Update to midnight");
       return {
-        previous: new Date(this.now.getFullYear(),this.now.getMonth(),this.now.getDate(),0,0,0).getTime(),
-        next: new Date(this.now.getFullYear(),this.now.getMonth(),this.now.getDate() + 2,0,0,0).getTime()
-      }
+        previous: new Date(
+          this.now.getFullYear(),
+          this.now.getMonth(),
+          this.now.getDate(),
+          0,
+          0,
+          0
+        ).getTime(),
+        next: new Date(
+          this.now.getFullYear(),
+          this.now.getMonth(),
+          this.now.getDate() + 2,
+          0,
+          0,
+          0
+        ).getTime()
+      };
     },
     locate: function() {
       navigator.geolocation.getCurrentPosition(
@@ -136,14 +152,7 @@ export default {
       );
     },
     times() {
-      console.log("Recalculate times")
-      let cardinals = [
-        {az: 0, s: "S"},
-        {az: 0.5 * Math.PI, s: "E"},
-        {az: Math.PI, s: "N"},
-        {az: 1.5 * Math.PI, s: "W"},
-        {az: 2 * Math.PI, s: "S"},
-      ]
+      console.log("Recalculate times");
       let steps = 24 * 60 * 2;
       let step = (this.midnight.next - this.midnight.previous) / steps;
       let times = {
@@ -153,12 +162,18 @@ export default {
       let running = { position: false, absAlt: 0, nextCardinal: false };
       let detail = [...Array(steps)].map((_, i) => {
         let time = new Date(this.midnight.previous + i * step);
-        let position = A.Moon.topocentricPosition(new A.JulianDay(new Date(this.midnight.previous + i * step)), this.astronomicalCoordinates).hz;
+        let position = A.Moon.topocentricPosition(
+          new A.JulianDay(new Date(this.midnight.previous + i * step)),
+          this.astronomicalCoordinates
+        ).hz;
         let entry = {
           time: time,
           position: position
         };
-        if (running.position && Math.sign(running.position.alt) != Math.sign(position.alt)) {
+        if (
+          running.position &&
+          Math.sign(running.position.alt) != Math.sign(position.alt)
+        ) {
           position.alt > 0 ? times.rise.push(entry) : times.set.push(entry);
         }
         running.position = position;
@@ -167,7 +182,7 @@ export default {
       });
       times.absAlt = running.absAlt;
       times.detail = detail;
-      console.log("Times done")
+      console.log("Times done");
       return times;
     }
   }
