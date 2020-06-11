@@ -155,7 +155,7 @@ export default {
       return A.MoonIllum.positionAngle(
         this.moonTopocentricPosition.eq,
         this.sunTopocentricPosition
-      )/Math.PI*180;
+      )/Math.PI*0;
     },
     currentPosition() {
       return A.Moon.topocentricPosition(this.jdo, this.astronomicalCoordinates)
