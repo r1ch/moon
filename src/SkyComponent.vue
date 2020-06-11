@@ -2,7 +2,7 @@
   <div>
     <div id="d3">
       <div id="moon"></div>
-      <small>{{phaseText}} ({{Number(this.illuminated).toFixed(2)}}%)</small>
+      <small>{{phaseText}} ({{Number(100*this.illuminated).toFixed(2)}}%)</small>
       <div id="horizon"></div>
     </div>
   </div>
