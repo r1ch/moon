@@ -8,7 +8,7 @@
       </tr>
       <tr>
         <td>
-          {{ this.nextRise.time.toLocaleTimeString().slice(0, 5) }}<br />
+          {{ this.nextRise.time.toLocaleTimeString() }}<br />
           <small>{{
             this.nextRise.time.getDate() == this.now.getDate()
               ? "today"
@@ -16,7 +16,7 @@
           }}</small>
         </td>
         <td>
-          {{ this.nextSet.time.toLocaleTimeString().slice(0, 5) }}<br />
+          {{ this.nextSet.time.toLocaleTimeString() }}<br />
           <small>{{
             this.nextSet.time.getDate() == this.now.getDate()
               ? "today"
@@ -155,7 +155,7 @@ export default {
       return A.MoonIllum.positionAngle(
         this.moonTopocentricPosition.eq,
         this.sunTopocentricPosition
-      );
+      )/Math.PI*180;
     },
     currentPosition() {
       return A.Moon.topocentricPosition(this.jdo, this.astronomicalCoordinates)

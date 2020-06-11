@@ -74,10 +74,6 @@ export default {
       .append("g")
       .attr("transform", `translate(${this.margin.left},${this.margin.top})`)
       .append("g")
-      .attr(
-        "transform",
-        `translate(${this.moon.offset}) rotate(${this.angle}, ${this.moon.radius}, ${this.moon.radius})`
-      );
 
     this.moonSvg
       .append("clipPath")
@@ -145,6 +141,9 @@ export default {
       let moonSweeps = this.sweeps(this.moon.radius, this.phase);
       let horizonSweeps = this.sweeps(this.horizon.radius, this.phase);
 
+      this.moonSvg
+           .attr("transform",`translate(${this.moon.offset}) rotate(${this.angle} ${this.moon.radius}, ${this.moon.radius})`)
+           
       this.moonSvg
         .selectAll(".moonlit")
         .data([1])
@@ -247,7 +246,7 @@ export default {
         .call(selection =>
           selection
             .selectAll(".cardinaltime")
-            .text(d => d.time.toLocaleTimeString().slice(0, 5))
+            .text(d => d.time.toLocaleTimeString())
             .attr("x", d => horizonScale(d.time))
         )
         .call(selection =>
