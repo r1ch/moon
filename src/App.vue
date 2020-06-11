@@ -8,7 +8,7 @@
       </tr>
       <tr>
         <td>
-          {{ this.nextSet.time.toLocaleTimeString() }}<br />
+          {{ this.nextSet.time.toLocaleTimeString().slice(0,5) }}<br />
           <small>{{
             this.nextSet.time.getDate() == this.now.getDate()
               ? "today"
@@ -16,7 +16,7 @@
           }}</small>
         </td>
         <td>
-          {{ this.nextRise.time.toLocaleTimeString() }}<br />
+          {{ this.nextRise.time.toLocaleTimeString().slice(0,5) }}<br />
           <small>{{
             this.nextSet.time.getDate() == this.now.getDate()
               ? "today"

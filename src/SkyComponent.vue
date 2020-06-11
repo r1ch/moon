@@ -2,6 +2,7 @@
   <div>
     <div id="d3">
       <div id="moon"></div>
+      <small>{{["Waxing Cresent","Waxing Gibbous","Waning Gibbous","Waning Crescent"][Math.floor(phase*4)]}}</small>
       <div id="horizon"></div>
     </div>
   </div>
@@ -217,16 +218,53 @@ export default {
       this.horizonSvg
         .selectAll(".cardinal")
         .data([...this.times.rise, ...this.times.set])
-        .join(enter => enter.append("text").attr("class", "cardinal"))
-        .text(d => cardinalFor(d.position).point)
+        .join(
+          enter => enter
+          .append("text")
+          .attr("class", "cardinal")
+          .call(
+            enter=>enter
+            .append("tspan")
+            .attr("class","cardinaltime")
+            .attr("dy","1em")
+          )
+          .call(
+            enter=>enter
+            .append("tspan")
+            .attr("class","cardinalposition")
+            .attr("dy","1em"))
+        )
         .attr("x", d => horizonScale(d.time))
-        .attr("y", this.horizonInner.height / -8);
+        .attr("y", this.horizonInner.height / -4)
+        .call(
+          selection=>selection
+          .selectAll(".cardinaltime")
+          .text(d=>d.time.toLocaleTimeString().slice(0,5))
+          .attr("x", d => horizonScale(d.time))
+        )
+        .call(
+          selection=>selection
+          .selectAll(".cardinalposition")
+          .text(d=>cardinalFor(d.position).point)
+          .attr("x", d => horizonScale(d.time))
+        )
 
       this.horizonSvg
         .selectAll(".axis")
         .data([1])
         .join(enter => enter.append("g").attr("class", "axis"))
         .call(horizonAxis);
+      
+      this.horizonSvg
+        .selectAll(".axislabel")
+        .data(["horizon"])
+        .join(
+          enter=>enter
+          .append("text").attr("class","axislabel")
+          .text(d=>d)
+          .attr("dy",-1)
+        )
+
 
       this.horizonSvg
         .selectAll(".risePath")
@@ -283,6 +321,10 @@ svg {
   margin: auto;
 }
 
+.axislabel {
+  font-size:10px;
+}
+
 .moonlit {
   fill: white;
   stroke: black;
@@ -319,7 +361,12 @@ svg {
   stroke-dasharray: 1 1;
 }
 
-.cardinal {
+.cardinaltime {
+  font-size:10px;
+  text-anchor: middle;
+}
+
+.cardinalposition {
   text-anchor: middle;
 }
 
