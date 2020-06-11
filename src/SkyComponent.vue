@@ -2,14 +2,7 @@
   <div>
     <div id="d3">
       <div id="moon"></div>
-      <small>{{
-        [
-          "Waxing Cresent",
-          "Waxing Gibbous",
-          "Waning Gibbous",
-          "Waning Crescent"
-        ][Math.floor(phase * 4)]
-      }}</small>
+      <small>{{phaseText}} ({{Number(this.illuminated).toFixed(2)}}%)</small>
       <div id="horizon"></div>
     </div>
   </div>
@@ -115,6 +108,19 @@ export default {
     }
   },
   computed: {
+    phaseText() {
+      return [
+        { phase : 0.001, text : "New Moon"},
+        { phase : 0.249, text : "Waxing Crescent"},
+        { phase : 0.251, text : "First Quarter"},
+        { phase : 0.499, text : "Waxing Gibbous"},
+        { phase : 0.501, text : "Full Moon"},
+        { phase : 0.749, text : "Waning Gibbous"},
+        { phase : 0.751, text : "First Quarter"},
+        { phase : 0.999, text : "Waning Crescent"},
+        { phase : 1.000, text : "New Moon"}
+      ].find(name=>this.phase<name.phase).text
+    },
     phase() {
       let phase = 1 - this.illuminated / 2;
       return phase;
@@ -240,21 +246,20 @@ export default {
                 .attr("class", "cardinalposition")
                 .attr("dy", "1em")
             )
-        )
-        .attr("x", d => horizonScale(d.time))
-        .attr("y", this.horizonInner.height / -4)
-        .call(selection =>
-          selection
+        ).attr("y", this.horizonInner.height / -4)
+
+        this.horizonSvg
             .selectAll(".cardinaltime")
+            .data([...this.times.rise, ...this.times.set])
             .text(d => d.time.toLocaleTimeString())
             .attr("x", d => horizonScale(d.time))
-        )
-        .call(selection =>
-          selection
+
+        this.horizonSvg
             .selectAll(".cardinalposition")
+            .data([...this.times.rise, ...this.times.set])
             .text(d => cardinalFor(d.position).point)
             .attr("x", d => horizonScale(d.time))
-        );
+
 
       this.horizonSvg
         .selectAll(".axis")
@@ -284,12 +289,11 @@ export default {
         .data([1])
         .join(enter => enter.append("path").attr("class", "tinydark"))
         .attr("d", `${horizonSweeps.dark.join(" ")}`)
-        .attr("transform-origin", "center")
         .attr(
           "transform",
           `translate(${horizonScale(this.now) -
             this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
-            this.horizon.radius})`
+            this.horizon.radius}),rotate(${this.angle},${this.horizon.radius},${this.horizon.radius})`
         );
 
       this.horizonSvg
@@ -301,7 +305,7 @@ export default {
           "transform",
           `translate(${horizonScale(this.now) -
             this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
-            this.horizon.radius})`
+            this.horizon.radius}),rotate(${this.angle},${this.horizon.radius},${this.horizon.radius})`
         );
 
       this.horizonSvg
