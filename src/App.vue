@@ -177,7 +177,7 @@ export default {
       );
     },
     times() {
-      let minute = 60 * 1000;
+      let minute = 3 * 60 * 1000;
       let second = 1000;
       let times = {
         absAlt: 0,
@@ -185,6 +185,7 @@ export default {
         set: [],
         detail: []
       };
+      let k = 0;
       for (
         let [i, step, previousPosition] = [
           this.midnight.previous,
@@ -195,6 +196,7 @@ export default {
         i <= this.midnight.next;
         i += step
       ) {
+        k++;
         let time = new Date(i);
         let position = A.Moon.topocentricPosition(
           new A.JulianDay(time),
@@ -230,6 +232,7 @@ export default {
         times.absAlt = Math.max(times.absAlt, Math.abs(position.alt));
         times.detail.push(entry);
       }
+      console.log(k);
       return times;
     }
   }
