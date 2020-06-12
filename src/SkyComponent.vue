@@ -2,7 +2,11 @@
   <div>
     <div id="d3">
       <div id="moon"></div>
-      <small>{{phaseText}} ({{Number(100*this.illuminated).toFixed(2)}}%)</small>
+      <small
+        >{{ phaseText }} ({{
+          Number(100 * this.illuminated).toFixed(2)
+        }}%)</small
+      >
       <div id="horizon"></div>
     </div>
   </div>
@@ -66,7 +70,7 @@ export default {
       .attr("height", this.moonFull.height)
       .append("g")
       .attr("transform", `translate(${this.margin.left},${this.margin.top})`)
-      .append("g")
+      .append("g");
 
     this.moonSvg
       .append("clipPath")
@@ -110,16 +114,16 @@ export default {
   computed: {
     phaseText() {
       return [
-        { phase : 0.001, text : "New Moon"},
-        { phase : 0.249, text : "Waxing Crescent"},
-        { phase : 0.251, text : "First Quarter"},
-        { phase : 0.499, text : "Waxing Gibbous"},
-        { phase : 0.501, text : "Full Moon"},
-        { phase : 0.749, text : "Waning Gibbous"},
-        { phase : 0.751, text : "First Quarter"},
-        { phase : 0.999, text : "Waning Crescent"},
-        { phase : 1.000, text : "New Moon"}
-      ].find(name=>this.phase<name.phase).text
+        { phase: 0.001, text: "New Moon" },
+        { phase: 0.249, text: "Waxing Crescent" },
+        { phase: 0.251, text: "First Quarter" },
+        { phase: 0.499, text: "Waxing Gibbous" },
+        { phase: 0.501, text: "Full Moon" },
+        { phase: 0.749, text: "Waning Gibbous" },
+        { phase: 0.751, text: "First Quarter" },
+        { phase: 0.999, text: "Waning Crescent" },
+        { phase: 1.0, text: "New Moon" }
+      ].find(name => this.phase < name.phase).text;
     },
     phase() {
       let phase = 1 - this.illuminated / 2;
@@ -147,9 +151,11 @@ export default {
       let moonSweeps = this.sweeps(this.moon.radius, this.phase);
       let horizonSweeps = this.sweeps(this.horizon.radius, this.phase);
 
-      this.moonSvg
-           .attr("transform",`translate(${this.moon.offset}) rotate(${this.angle} ${this.moon.radius}, ${this.moon.radius})`)
-           
+      this.moonSvg.attr(
+        "transform",
+        `translate(${this.moon.offset}) rotate(${this.angle} ${this.moon.radius}, ${this.moon.radius})`
+      );
+
       this.moonSvg
         .selectAll(".moonlit")
         .data([1])
@@ -246,20 +252,20 @@ export default {
                 .attr("class", "cardinalposition")
                 .attr("dy", "1em")
             )
-        ).attr("y", this.horizonInner.height / -4)
+        )
+        .attr("y", this.horizonInner.height / -4);
 
-        this.horizonSvg
-            .selectAll(".cardinaltime")
-            .data([...this.times.rise, ...this.times.set])
-            .text(d => d.time.toLocaleTimeString())
-            .attr("x", d => horizonScale(d.time))
+      this.horizonSvg
+        .selectAll(".cardinaltime")
+        .data([...this.times.rise, ...this.times.set])
+        .text(d => d.time.toLocaleTimeString())
+        .attr("x", d => horizonScale(d.time));
 
-        this.horizonSvg
-            .selectAll(".cardinalposition")
-            .data([...this.times.rise, ...this.times.set])
-            .text(d => cardinalFor(d.position).point)
-            .attr("x", d => horizonScale(d.time))
-
+      this.horizonSvg
+        .selectAll(".cardinalposition")
+        .data([...this.times.rise, ...this.times.set])
+        .text(d => cardinalFor(d.position).point)
+        .attr("x", d => horizonScale(d.time));
 
       this.horizonSvg
         .selectAll(".axis")
@@ -293,7 +299,9 @@ export default {
           "transform",
           `translate(${horizonScale(this.now) -
             this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
-            this.horizon.radius}),rotate(${this.angle},${this.horizon.radius},${this.horizon.radius})`
+            this.horizon.radius}),rotate(${this.angle},${this.horizon.radius},${
+            this.horizon.radius
+          })`
         );
 
       this.horizonSvg
@@ -305,7 +313,9 @@ export default {
           "transform",
           `translate(${horizonScale(this.now) -
             this.horizon.radius},${altitudeScale(this.currentPosition.alt) -
-            this.horizon.radius}),rotate(${this.angle},${this.horizon.radius},${this.horizon.radius})`
+            this.horizon.radius}),rotate(${this.angle},${this.horizon.radius},${
+            this.horizon.radius
+          })`
         );
 
       this.horizonSvg

@@ -73,6 +73,9 @@ export default {
   }),
   created: function() {
     this.midnight = this.calculateMidnight();
+    setTimeout(() => {
+      this.detailed = true;
+    }, 100);
     setInterval(() => {
       let date = new Date();
       if (date.getDate() != this.day) this.day = date.getDate();
@@ -106,6 +109,7 @@ export default {
         ).getTime()
       };
     },
+    getTimesFor() {},
     locate: function() {
       navigator.geolocation.getCurrentPosition(
         position => {
@@ -152,10 +156,11 @@ export default {
       return A.MoonIllum.illuminated(this.phase);
     },
     angle() {
-      return A.MoonIllum.positionAngle(
+      let PA = A.MoonIllum.positionAngle(
         this.moonTopocentricPosition.eq,
         this.sunTopocentricPosition
-      )/Math.PI*0;
+      );
+      return ((PA - this.moonTopocentricPosition.q) / Math.PI) * -180 + 90;
     },
     currentPosition() {
       return A.Moon.topocentricPosition(this.jdo, this.astronomicalCoordinates)
@@ -172,18 +177,27 @@ export default {
       );
     },
     times() {
-      console.log("Recalculate times");
-      let steps = 24 * 60 * 2;
-      let step = (this.midnight.next - this.midnight.previous) / steps;
+      let minute = 60 * 1000;
+      let second = 1000;
       let times = {
+        absAlt: 0,
         rise: [],
-        set: []
+        set: [],
+        detail: []
       };
-      let running = { position: false, absAlt: 0, nextCardinal: false };
-      let detail = [...Array(steps)].map((_, i) => {
-        let time = new Date(this.midnight.previous + i * step);
+      for (
+        let [i, step, previousPosition] = [
+          this.midnight.previous,
+          minute,
+          false,
+          0
+        ];
+        i <= this.midnight.next;
+        i += step
+      ) {
+        let time = new Date(i);
         let position = A.Moon.topocentricPosition(
-          new A.JulianDay(new Date(this.midnight.previous + i * step)),
+          new A.JulianDay(time),
           this.astronomicalCoordinates
         ).hz;
         let entry = {
@@ -191,18 +205,31 @@ export default {
           position: position
         };
         if (
-          running.position &&
-          Math.sign(running.position.alt) != Math.sign(position.alt)
+          previousPosition &&
+          Math.sign(previousPosition.alt) != Math.sign(position.alt)
         ) {
-          position.alt > 0 ? times.rise.push(entry) : times.set.push(entry);
+          // we just crossed the horizon
+          if (step == minute) {
+            //backtrack and do this in seconds
+            console.log(`Crossed ${time}, ${step}`);
+            i -= step;
+            step = second;
+            i += step;
+            console.log(`Crossed ${time}, ${step}`);
+            continue;
+          } else {
+            console.log(`Crossed ${time}, ${step}`);
+            //capture the crossing, then skip to next iteration
+            position.alt > 0 ? times.rise.push(entry) : times.set.push(entry);
+            step = minute;
+            i -= i % step;
+            console.log(`Crossed ${time}, ${step}`);
+          }
         }
-        running.position = position;
-        running.absAlt = Math.max(running.absAlt, Math.abs(position.alt));
-        return entry;
-      });
-      times.absAlt = running.absAlt;
-      times.detail = detail;
-      console.log("Times done");
+        previousPosition = position;
+        times.absAlt = Math.max(times.absAlt, Math.abs(position.alt));
+        times.detail.push(entry);
+      }
       return times;
     }
   }
