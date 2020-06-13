@@ -91,11 +91,17 @@ export default {
       .attr("transform", `translate(${this.horizon.offset})`);
 
     let defs = this.moonSvg.append("defs");
-    let filter = defs.append("filter").attr("id", "glow");
+    let filter = defs
+      .append("filter")
+      .attr("id", "glow")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%");
 
     filter
       .append("feGaussianBlur")
-      .attr("stdDeviation", "3.5")
+      .attr("stdDeviation", "9")
       .attr("result", "moonShine");
 
     let feMerge = filter.append("feMerge");
