@@ -120,7 +120,7 @@ export default {
         { phase: 0.499, text: "Waxing Gibbous" },
         { phase: 0.501, text: "Full Moon" },
         { phase: 0.749, text: "Waning Gibbous" },
-        { phase: 0.751, text: "First Quarter" },
+        { phase: 0.751, text: "Last Quarter" },
         { phase: 0.999, text: "Waning Crescent" },
         { phase: 1.0, text: "New Moon" }
       ].find(name => this.phase < name.phase).text;
