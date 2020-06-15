@@ -102,12 +102,12 @@ export default {
     filter
       .append("feGaussianBlur")
       .attr("stdDeviation", 1)
-      .attr("result", "moonShine");
+      .attr("result", "moonDark");
 
     filter
       .append("feGaussianBlur")
       .attr("stdDeviation", 12)
-      .attr("result", "moonDark");
+      .attr("result", "moonShine");
 
 
     let feMerge = filter.append("feMerge");
