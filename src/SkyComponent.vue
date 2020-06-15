@@ -101,13 +101,19 @@ export default {
 
     filter
       .append("feGaussianBlur")
-      .attr("stdDeviation", "9")
+      .attr("stdDeviation", 1)
       .attr("result", "moonShine");
+
+    filter
+      .append("feGaussianBlur")
+      .attr("stdDeviation", 12)
+      .attr("result", "moonDark");
+
 
     let feMerge = filter.append("feMerge");
 
+    feMerge.append("feMergeNode").attr("in", "moonDark");
     feMerge.append("feMergeNode").attr("in", "moonShine");
-
     feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
     this.draw();
@@ -151,6 +157,7 @@ export default {
       sweeps.dark.push(`a ${radius * (phase <= 0.5 ? 1 : 4 * Math.abs(phase - 0.75))},${radius} 0 0 ${phase > 0.5 && phase <= 0.75 ? 1 : 0} 0,${2 * radius}`);
       // eslint-disable-next-line
       sweeps.dark.push(`a ${radius * (phase <= 0.5 ? 4 * Math.abs(phase - 0.25) : 1)},${radius} 0 0 ${phase >= 0.25 && phase < 0.5 ? 1 : 0} 0,${-2 * radius}`);
+      
       return sweeps;
     },
     draw: function() {
@@ -161,6 +168,19 @@ export default {
         "transform",
         `translate(${this.moon.offset}) rotate(${this.angle} ${this.moon.radius}, ${this.moon.radius})`
       );
+
+     this.moonSvg
+        .selectAll(".moonborder")
+        .data([1])
+        .join(enter =>
+          enter
+            .append("circle")
+            .attr("class","moonborder")
+            .attr("r", this.moon.radius)
+            .attr("cx", this.moon.radius)
+            .attr("cy", this.moon.radius)
+            .attr("clip-path", "url(#outer-clip)")
+        )
 
       this.moonSvg
         .selectAll(".moonlit")
@@ -184,6 +204,7 @@ export default {
         )
         .attr("d", `${moonSweeps.dark.join(" ")}`)
         .style("filter", "url(#glow)");
+
 
       let horizonScale = d3
         .scaleTime()
@@ -354,13 +375,20 @@ svg {
 
 .moonlit {
   fill: white;
-  stroke: black;
+  stroke: none;
 }
 
 .moondark {
   fill: #444;
   stroke: none;
 }
+
+.moonborder {
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 1px;
+  fill: none;
+}
+
 
 .orbit {
   fill: none;
