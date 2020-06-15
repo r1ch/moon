@@ -179,7 +179,7 @@ export default {
             .attr("r", this.moon.radius)
             .attr("cx", this.moon.radius)
             .attr("cy", this.moon.radius)
-            .attr("clip-path", "url(#outer-clip)")
+
         )
 
       this.moonSvg
