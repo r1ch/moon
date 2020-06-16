@@ -22,3 +22,10 @@
           run: |
             git config user.name "covidnineteen"
             npm run gh-pages-deploy
+            npm install capture-website
+            cp ./scripts/snapshot.js ./
+            node index.js
+            git add snapshot.png
+            git commit -m "New snapshot"
+            git push
+            
