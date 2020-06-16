@@ -2,10 +2,10 @@ const captureWebsite = require('capture-website');
 
 (async () => {
   await captureWebsite.file(
-    'index.html',
-    'local-file.png',
+    'https://bradi.sh/moon',
+    'snapshot.png',
     {
-      element : ".level0",
+      element : "body",
       height: 9999
     }
   );
