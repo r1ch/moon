@@ -4,7 +4,7 @@
       <div id="moon"></div>
       <small
         >{{ phaseText }} ({{
-          Number(100 * this.illuminated).toFixed(2)
+          Number(100 * this.illuminated).toFixed(1)
         }}%)</small
       >
       <div id="horizon"></div>
