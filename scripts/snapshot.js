@@ -5,7 +5,7 @@ const captureWebsite = require('capture-website');
     'https://bradi.sh/moon',
     'snapshot.png',
     {
-      element : "body",
+      element : "#app",
       height: 9999
     }
   );
