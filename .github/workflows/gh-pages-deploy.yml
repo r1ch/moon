@@ -24,6 +24,7 @@
             npm run gh-pages-deploy
             npm install capture-website
             cp ./scripts/snapshot.js ./
+            rm snapshot.png
             node snapshot.js
             git add snapshot.png
             git commit -m "New snapshot"
