@@ -135,7 +135,7 @@ export default {
         { phase: 0.751, text: "Last Quarter" },
         { phase: 0.99, text: "Waning Crescent" },
         { phase: 1.0, text: "New Moon" }
-      ].find(name => this.phase < name.phase).text;
+      ].find(name => this.illuminated < name.phase).text;
     },
     phase() {
       let phase = 1 - this.illuminated / 2;
