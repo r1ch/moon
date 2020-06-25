@@ -2,11 +2,11 @@
   <div>
     <div id="d3">
       <div id="moon"></div>
-      <small
+      <!--<small
         >{{ phaseText }} ({{
           Number(100 * this.illuminated).toFixed(1)
         }}%)</small
-      >
+      >-->
       <div id="horizon"></div>
     </div>
   </div>
