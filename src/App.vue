@@ -46,6 +46,7 @@
       :now="now"
       :angle="angle"
       :illuminated="illuminated"
+      :phase="phase"
       :times="times"
       :currentPosition="currentPosition"
     ></sky-component>
@@ -54,7 +55,12 @@
 
 <script>
 import SkyComponent from "./SkyComponent.vue";
-const A = require("meeusjs");
+import Moonposition from "astronomia/src/moonposition";
+import {Coord} from "astronomia/src/globe";
+import {Ecliptic} from "astronomia/src/coord";
+import Julian from "astronomia/src/julian";
+import Sidereal from "astronomia/src/sidereal";
+import {nutation} from "astronomia/src/nutation";
 
 export default {
   name: "App",
@@ -72,10 +78,8 @@ export default {
     midnight: false
   }),
   created: function() {
+    console.log(this.moonPositionOn(new Date()))
     this.midnight = this.calculateMidnight();
-    setTimeout(() => {
-      this.detailed = true;
-    }, 100);
     setInterval(() => {
       let date = new Date();
       if (date.getDate() != this.day) this.day = date.getDate();
@@ -109,7 +113,27 @@ export default {
         ).getTime()
       };
     },
-    getTimesFor() {},
+    moonPositionOn: function(date) {
+      let calendar = new Julian.Calendar().fromDate(date)
+      let jd = calendar.toJD()
+      let jde = calendar.toJDE()
+      let siderealTime = Sidereal.apparent0UT(jd);
+      let eclipticMoonPosition = Moonposition.position(jde);
+      let obliquity = nutation(jde)[1];
+      
+      let equatorialMoonPosition = new Ecliptic(
+        eclipticMoonPosition.lat,
+        eclipticMoonPosition.lon
+      ).toEquatorial(obliquity);
+
+      console.log(eclipticMoonPosition)
+
+      let horizontalMoonPosition = equatorialMoonPosition.toHorizontal(
+        this.geographicCoordinates,
+        siderealTime
+      );
+      return horizontalMoonPosition;
+    },
     locate: function() {
       navigator.geolocation.getCurrentPosition(
         position => {
@@ -127,44 +151,11 @@ export default {
     }
   },
   computed: {
-    jdo() {
-      return new A.JulianDay(this.now);
-    },
-    astronomicalCoordinates() {
-      return A.EclCoord.fromWgs84(
-        this.deviceCoordinates.latitude,
-        this.deviceCoordinates.longitude,
-        this.deviceCoordinates.altitide
+    geographicCoordinates() {
+      return new Coord(
+        this.deviceCoordinates.latitude / 180 * Math.PI,
+        this.deviceCoordinates.longitude / 180 * Math.PI
       );
-    },
-    sunTopocentricPosition() {
-      return A.Solar.apparentTopocentric(
-        this.jdo,
-        this.astronomicalCoordinates
-      );
-    },
-    moonTopocentricPosition() {
-      return A.Moon.topocentricPosition(this.jdo, this.astronomicalCoordinates);
-    },
-    phase() {
-      return A.MoonIllum.phaseAngleEq2(
-        this.moonTopocentricPosition.eq,
-        this.sunTopocentricPosition
-      );
-    },
-    illuminated() {
-      return A.MoonIllum.illuminated(this.phase);
-    },
-    angle() {
-      let PA = A.MoonIllum.positionAngle(
-        this.moonTopocentricPosition.eq,
-        this.sunTopocentricPosition
-      );
-      return ((PA - this.moonTopocentricPosition.q) / Math.PI) * -180 + 90;
-    },
-    currentPosition() {
-      return A.Moon.topocentricPosition(this.jdo, this.astronomicalCoordinates)
-        .hz;
     },
     nextRise() {
       return this.times.rise.find(
@@ -198,10 +189,7 @@ export default {
       ) {
         k++;
         let time = new Date(i);
-        let position = A.Moon.topocentricPosition(
-          new A.JulianDay(time),
-          this.astronomicalCoordinates
-        ).hz;
+        let position = this.moonPositionOn(time)
         let entry = {
           time: time,
           position: position

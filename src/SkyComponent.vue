@@ -109,7 +109,6 @@ export default {
       .attr("stdDeviation", 12)
       .attr("result", "moonShine");
 
-
     let feMerge = filter.append("feMerge");
 
     feMerge.append("feMergeNode").attr("in", "moonDark");
@@ -157,7 +156,7 @@ export default {
       sweeps.dark.push(`a ${radius * (phase <= 0.5 ? 1 : 4 * Math.abs(phase - 0.75))},${radius} 0 0 ${phase > 0.5 && phase <= 0.75 ? 1 : 0} 0,${2 * radius}`);
       // eslint-disable-next-line
       sweeps.dark.push(`a ${radius * (phase <= 0.5 ? 4 * Math.abs(phase - 0.25) : 1)},${radius} 0 0 ${phase >= 0.25 && phase < 0.5 ? 1 : 0} 0,${-2 * radius}`);
-      
+
       return sweeps;
     },
     draw: function() {
@@ -169,18 +168,17 @@ export default {
         `translate(${this.moon.offset}) rotate(${this.angle} ${this.moon.radius}, ${this.moon.radius})`
       );
 
-     this.moonSvg
+      this.moonSvg
         .selectAll(".moonborder")
         .data([1])
         .join(enter =>
           enter
             .append("circle")
-            .attr("class","moonborder")
+            .attr("class", "moonborder")
             .attr("r", this.moon.radius)
             .attr("cx", this.moon.radius)
             .attr("cy", this.moon.radius)
-
-        )
+        );
 
       this.moonSvg
         .selectAll(".moonlit")
@@ -204,7 +202,6 @@ export default {
         )
         .attr("d", `${moonSweeps.dark.join(" ")}`)
         .style("filter", "url(#glow)");
-
 
       let horizonScale = d3
         .scaleTime()
@@ -388,7 +385,6 @@ svg {
   stroke-width: 1px;
   fill: none;
 }
-
 
 .orbit {
   fill: none;
