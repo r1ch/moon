@@ -48,6 +48,8 @@
       :illuminated="illuminated"
       :times="times"
       :currentPosition="currentPosition"
+      :phase="phase"
+      :waxWane="waxWane"
     ></sky-component>
   </div>
 </template>
@@ -69,13 +71,11 @@ export default {
     },
     day: new Date().getDate(),
     now: new Date(),
+    waxWane : false,
     midnight: false
   }),
   created: function() {
     this.midnight = this.calculateMidnight();
-    setTimeout(() => {
-      this.detailed = true;
-    }, 100);
     setInterval(() => {
       let date = new Date();
       if (date.getDate() != this.day) this.day = date.getDate();
@@ -85,6 +85,9 @@ export default {
   watch: {
     day: function() {
       this.midnight = this.calculateMidnight();
+    },
+    illuminated(newVal,oldVal){
+      if(newVal && oldVal) this.waxWane = newVal > oldVal ? -1 : +1;
     }
   },
   methods: {

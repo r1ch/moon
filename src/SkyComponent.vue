@@ -2,11 +2,11 @@
   <div>
     <div id="d3">
       <div id="moon"></div>
-      <!--<small
+      <small
         >{{ phaseText }} ({{
           Number(100 * this.illuminated).toFixed(1)
         }}%)</small
-      >-->
+      >
       <div id="horizon"></div>
     </div>
   </div>
@@ -17,7 +17,7 @@ const d3 = require("d3");
 
 export default {
   name: "sky-component",
-  props: ["now", "angle", "illuminated", "times", "currentPosition"],
+  props: ["now", "angle", "illuminated", "times", "currentPosition", "phase", "waxWane"],
   data: function() {
     let margin = {
       top: 20,
@@ -125,21 +125,18 @@ export default {
   },
   computed: {
     phaseText() {
+      let index = this.waxWane < 0 ? this.illuminated / 2 : (2-this.illuminated)/2
       return [
-        { phase: 0.01, text: "New Moon" },
-        { phase: 0.249, text: "Waxing Crescent" },
-        { phase: 0.251, text: "First Quarter" },
-        { phase: 0.499, text: "Waxing Gibbous" },
-        { phase: 0.501, text: "Full Moon" },
-        { phase: 0.749, text: "Waning Gibbous" },
-        { phase: 0.751, text: "Last Quarter" },
-        { phase: 0.99, text: "Waning Crescent" },
-        { phase: 1.0, text: "New Moon" }
-      ].find(name => this.illuminated < name.phase).text;
-    },
-    phase() {
-      let phase = 1 - this.illuminated / 2;
-      return phase;
+        { index: 0.01, text: "New Moon" },
+        { index: 0.249, text: "Waxing Crescent" },
+        { index: 0.251, text: "First Quarter" },
+        { index: 0.499, text: "Waxing Gibbous" },
+        { index: 0.501, text: "Full Moon" },
+        { index: 0.749, text: "Waning Gibbous" },
+        { index: 0.751, text: "Last Quarter" },
+        { index: 0.99, text: "Waning Crescent" },
+        { index: 1.0, text: "New Moon" }
+      ].find(name => index < name.index).text;
     }
   },
   methods: {
