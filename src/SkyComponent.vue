@@ -17,7 +17,7 @@ const d3 = require("d3");
 
 export default {
   name: "sky-component",
-  props: ["now", "angle", "illuminated", "times", "currentPosition", "phase", "waxWane"],
+  props: ["now", "angle", "illuminated", "times", "currentPosition", "waxWane"],
   data: function() {
     let margin = {
       top: 20,
@@ -137,6 +137,9 @@ export default {
         { index: 0.99, text: "Waning Crescent" },
         { index: 1.0, text: "New Moon" }
       ].find(name => index < name.index).text;
+    },
+    phase(){
+      return 1 - this.illuminated / 2;
     }
   },
   methods: {

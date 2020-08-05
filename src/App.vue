@@ -48,7 +48,6 @@
       :illuminated="illuminated"
       :times="times"
       :currentPosition="currentPosition"
-      :phase="phase"
       :waxWane="waxWane"
     ></sky-component>
   </div>
