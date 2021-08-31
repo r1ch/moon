@@ -29,11 +29,4 @@
             rm  -r dist
             git checkout -f master
             git branch -D gh-pages
-            npm install capture-website
-            cp ./scripts/snapshot.js ./
-            rm snapshot.png
-            node snapshot.js
-            git add snapshot.png
-            git commit -m "New snapshot"
-            git push
             
